@@ -77,15 +77,15 @@ def phi(T):
     return (Q_10)**((T - T_base) / 10.0)
 
 # Temperatura inresada por usuario
-T = 9.7    # [°C]
+T = 10.0    # [°C]      TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
 phi_val = phi(T)
 
 
 # ========================================            TIEMPO (t)         =========================================
-# TODO Verificar que está bien definido. Los tiempos están definidos por los usuarios.
+# TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
 # Tiempo inicial (T0) y final (Tf) de simulación
-t_0 = 0.0   # [mS]
-t_f = 30.0  # [mS]
+t_0 = 0.0   # [mS]      Valor de prueba
+t_f = 500.0  # [mS]     Valor de prueba
 
 # Se define un valor para h (Resolución de la respuesta / Step).
 h = 0.01    # [mS]
@@ -104,7 +104,15 @@ t = np.arange(t_0,t_f+h,h)
 # Corrientes ingresadas por el usuario en los dos (2) intervalos de tiempo indicados por el usuario en la GUI.
 
 # Arreglo mock
-I_array = np.zeros(t)
+# TODO Conectar los intervalos de tiempo dados por el usuario con los arreglos de corriente.
+I_array = np.zeros(len(t))
+IInd = np.where((t>=10)&(t<=50))
+I_array[IInd] = 20.0
+IInd = np.where((t>=100)&(t<=150))
+I_array[IInd] = 50.0
+IInd = np.where((t>=300)&(t<=350))
+I_array[IInd] = -15.0
+
 
 '''=====================================================================================================================
                                                 ECUACIONES DIFERENCIALES
@@ -155,58 +163,80 @@ def dh_dt(phi,Vm,h):
 # Antes de que el usuario ingrese los valores deseados, deben haber unos valores iniciales 'by default' para
 # las incógnitas de tal forma que se pueda ejecutar el modelo.
 
-V_m0 = -65 #[mV]    Este valor inicial corresponde a V_rest
+V_m0 = -65 #[mV]   # TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
 
 # Valores de probabilidad: Estimados a partir de gráficos de los papers sugeridos.
-m_0 = 0.05
-n_0 = 0.30
-h_0 = 0.60
+m_0 = 0.05      # TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
+n_0 = 0.30      # TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
+h_0 = 0.60      # TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
 
 
 #=======================================    ARREGLOS QUE ALMACENAN SOLUCIONES   ========================================
 
-# I. VOLTAJE DE MEMBRANA
+# I. POTENCIAL DE MEMBRANA
 
 # Se crea un arreglo que almacena el V_m de en cada iteración.
 Vm_EulerFor = np.zeros(len(t))
-#Vm_EulerBack = np.zeros(len(t))
-#Vm_EulerMod = np.zeros(len(t))
-#Vm_RK2 = np.zeros(len(t))
-#Vm_RK4 = np.zeros(len(t))
+Vm_EulerBack = np.zeros(len(t))
+Vm_EulerMod = np.zeros(len(t))
+Vm_RK2 = np.zeros(len(t))
+Vm_RK4 = np.zeros(len(t))
 
 # Se asigna el valor de la condicion inicial al primer valor. → V(t=0) = V_m0.
 Vm_EulerFor[0] = V_m0
-#Vm_EulerBack[0] = V_m0
-#Vm_EulerMod[0] = V_m0
-#Vm_RK2[0] = V_m0
-#Vm_RK4[0] = V_m0
+Vm_EulerBack[0] = V_m0
+Vm_EulerMod[0] = V_m0
+Vm_RK2[0] = V_m0
+Vm_RK4[0] = V_m0
 
 
 # II. PROBABILIDAD DE n
 
 # Se crea un arreglo que almacena el V_m de en cada iteración.
 n_EulerFor = np.zeros(len(t))
+n_EulerBack = np.zeros(len(t))
+n_EulerMod = np.zeros(len(t))
+n_RK2 = np.zeros(len(t))
+n_RK4 = np.zeros(len(t))
 
 # Se asigna el valor de la condicion inicial al primer valor. → V(t=0) = V_m0.
 n_EulerFor[0] = n_0
-
+n_EulerBack[0] = n_0
+n_EulerMod[0] = n_0
+n_RK2[0] = n_0
+n_RK4[0] = n_0
 
 # III. PROBABILIDAD DE m
 
 # Se crea un arreglo que almacena el V_m de en cada iteración.
 m_EulerFor = np.zeros(len(t))
+m_EulerBack = np.zeros(len(t))
+m_EulerMod = np.zeros(len(t))
+m_RK2 = np.zeros(len(t))
+m_RK4 = np.zeros(len(t))
 
 # Se asigna el valor de la condicion inicial al primer valor. → V(t=0) = V_m0.
 m_EulerFor[0] = m_0
-
+m_EulerBack[0] = m_0
+m_EulerMod[0] = m_0
+m_RK2[0] = m_0
+m_RK4[0] = m_0
 
 # IV. PROBABILIDAD DE h
 
 # Se crea un arreglo que almacena el V_m de en cada iteración.
 h_EulerFor = np.zeros(len(t))
+h_EulerBack = np.zeros(len(t))
+h_EulerMod = np.zeros(len(t))
+h_RK2 = np.zeros(len(t))
+h_RK4 = np.zeros(len(t))
 
 # Se asigna el valor de la condicion inicial al primer valor. → V(t=0) = V_m0.
-h_EulerFor[0] = m_0
+h_EulerFor[0] = h_0
+h_EulerBack[0] = h_0
+h_EulerMod[0] = h_0
+h_RK2[0] = h_0
+h_RK4[0] = h_0
 
 
 
@@ -231,3 +261,6 @@ for iter in range(1,len(t)):
     # TODO [Caro] Transcribir las ecuaciones que hice en papel.
 
     # RUNGE-KUTTA 4 (RK4)
+
+plt.figure()
+plt.plot(t,Vm_EulerFor)
