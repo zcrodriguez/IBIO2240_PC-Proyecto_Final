@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 from tkinter import *
+from tkinter import filedialog
 from tkinter import messagebox
 from PIL import ImageTk ,Image
 import tkinter.font as font
@@ -201,10 +202,10 @@ class Interfaz:
 
         #5
         self.T_lbl =  Label(self.frameParametros,width=5, text='T:', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f') 
-        self.T_lbl.place(x=30,y=180)
+        self.T_lbl.place(x=30,y=220)
 
         self.T_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=('math', 15, 'bold italic'))
-        self.T_in.place(x=120,y=180)
+        self.T_in.place(x=120,y=220)
         
     def placeHolderFn(self):
         fig = plt.Figure(figsize=(4, 2), dpi=100)
@@ -239,13 +240,23 @@ class Interfaz:
     
 
     def guardarDatos(self):
-        print('TODO: guardar')
-        pass
+        file_name = filedialog.asksaveasfilename()
+        try:
+            with open(file_name,'wb') as f:
+                pass
+        except:
+            pass
+        
     
 
     def cargarDatos(self):
-        print('TODO: cargar')
-        pass
+        file_name = filedialog.askopenfilename()
+        try:
+            with open(file_name,'rb') as f:
+                pass
+        except:
+            pass
+
 
 
     def iniciar(self):
