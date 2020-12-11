@@ -201,10 +201,10 @@ class Interfaz:
 
         #5
         self.T_lbl =  Label(self.frameParametros,width=5, text='T:', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f') 
-        self.T_lbl.place(x=30,y=180)
+        self.T_lbl.place(x=30,y=220)
 
         self.T_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=('math', 15, 'bold italic'))
-        self.T_in.place(x=120,y=180)
+        self.T_in.place(x=120,y=220)
         
     def placeHolderFn(self):
         fig = plt.Figure(figsize=(4, 2), dpi=100)
