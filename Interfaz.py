@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 from tkinter import *
+from tkinter import filedialog
 from tkinter import messagebox
 from PIL import ImageTk ,Image
 import tkinter.font as font
@@ -239,13 +240,23 @@ class Interfaz:
     
 
     def guardarDatos(self):
-        print('TODO: guardar')
-        pass
+        file_name = filedialog.asksaveasfilename()
+        try:
+            with open(file_name,'wb') as f:
+                pass
+        except:
+            pass
+        
     
 
     def cargarDatos(self):
-        print('TODO: cargar')
-        pass
+        file_name = filedialog.askopenfilename()
+        try:
+            with open(file_name,'rb') as f:
+                pass
+        except:
+            pass
+
 
 
     def iniciar(self):
