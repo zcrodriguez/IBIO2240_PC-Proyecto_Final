@@ -157,8 +157,8 @@ class Interfaz:
         self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atras",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulerbk_btn.place(x=45,y=100)
 
-        self.rk2_btn = Button(master=self.frameMetodos, text="Euler mod",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
-        self.rk2_btn.place(x=45,y=140)
+        self.eulermod_btn = Button(master=self.frameMetodos, text="Euler mod",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.eulermod_btn.place(x=45,y=140)
 
         self.rk2_btn = Button(master=self.frameMetodos, text="Runge-Kutta 2",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk2_btn.place(x=45,y=180)
