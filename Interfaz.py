@@ -89,8 +89,8 @@ class Interfaz:
         self.tiempo2 = StringVar()
         self.tiempo3 = StringVar()
         self.tiempo4 = StringVar()
-        self.intencidad1 = StringVar()
-        self.intencidad2 = StringVar()
+        self.intensidad1 = StringVar()
+        self.intensidad2 = StringVar()
         # ================================ Contenido ==================================
 
         # contenido de corriente
@@ -137,25 +137,25 @@ class Interfaz:
         self.ms_decor2.place(x=420,y=90)
 
         # intensidad corriente
-        self.titulo_intencidad =  Label(self.frameCorriente,width=10, text='Intencidad', font=('math', 10, 'bold italic'),fg = '#fff', bg ='#615d62') 
-        self.titulo_intencidad.place(x=460,y=10)
+        self.titulo_intensidad =  Label(self.frameCorriente,width=10, text='Intensidad', font=('math', 10, 'bold italic'),fg = '#fff', bg ='#615d62')
+        self.titulo_intensidad.place(x=460,y=10)
 
-        self.intencidad1_in = Entry(master=self.frameCorriente, textvariable=self.intencidad1, width=5, font=('math', 15, 'bold italic'), highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
-        self.intencidad1_in.place(x=470,y=50)
+        self.intensidad1_in = Entry(master=self.frameCorriente, textvariable=self.intensidad1, width=5, font=('math', 15, 'bold italic'), highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
+        self.intensidad1_in.place(x=470,y=50)
 
-        self.intencidad2_in = Entry(master=self.frameCorriente, textvariable=self.intencidad2, width=5, font=('math', 15, 'bold italic'), highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
-        self.intencidad2_in.place(x=470,y=90)
+        self.intensidad2_in = Entry(master=self.frameCorriente, textvariable=self.intensidad2, width=5, font=('math', 15, 'bold italic'), highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
+        self.intensidad2_in.place(x=470,y=90)
 
         
 
         # contenido de metodos
-        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solucion', font=('math', 15, 'bold italic'),fg = '#000', bg ='#615d62') 
+        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solución', font=('math', 15, 'bold italic'),fg = '#000', bg ='#615d62')
         self.metodos_lbl.place(x=35,y=10)
 
         self.eulerfw_btn = Button(master=self.frameMetodos, text="Euler Adelante",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20,height=1, font=self.fuente_ppal,border="0")
         self.eulerfw_btn.place(x=45,y=60)
 
-        self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atras",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atrás",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulerbk_btn.place(x=45,y=100)
 
         self.eulermod_btn = Button(master=self.frameMetodos, text="Euler mod",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
@@ -167,40 +167,40 @@ class Interfaz:
         self.rk4_btn = Button(master=self.frameMetodos, text="Runge-Kutta 4",  command = self.placeHolderFn, bg='#414044', fg = '#ffffff',  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk4_btn.place(x=45,y=220)
 
-        # contenido de parametros
-        # titulo
-        self.metodos_lbl =  Label(self.frameParametros, text='Parametros', font=('math', 15, 'bold italic'),fg = '#000', bg ='#615d62') 
+        # Contenido de parámetros
+        # Título
+        self.metodos_lbl =  Label(self.frameParametros, text='Parámetros', font=('math', 15, 'bold italic'),fg = '#000', bg ='#615d62')
         self.metodos_lbl.place(x=75,y=10)
-        # parametros
+        # Parámetros
         # 1
-        self.Vm0_lbl =  Label(self.frameParametros,width=5, text='Vm_0:', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f') 
+        self.Vm0_lbl =  Label(self.frameParametros,width=5, text='V'+u'\u2098'+u'\u2080'+':', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f')
         self.Vm0_lbl.place(x=30,y=60)
 
         self.Vm0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=('math', 15, 'bold italic'))
         self.Vm0_in.place(x=120,y=60)
         
         # 2
-        self.n0_lbl =  Label(self.frameParametros,width=5, text='n_0:', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f') 
+        self.n0_lbl =  Label(self.frameParametros,width=5, text='n'+u'\u2080'+':', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f')
         self.n0_lbl.place(x=30,y=100)
 
         self.n0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=('math', 15, 'bold italic'))
         self.n0_in.place(x=120,y=100)
 
-        #3
-        self.m0_lbl =  Label(self.frameParametros,width=5, text='m_0:', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f') 
+        # 3
+        self.m0_lbl =  Label(self.frameParametros,width=5, text='m'+u'\u2080'+':', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f')
         self.m0_lbl.place(x=30,y=140)
 
         self.m0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=('math', 15, 'bold italic'))
         self.m0_in.place(x=120,y=140)
 
-        #4
-        self.h0_lbl =  Label(self.frameParametros,width=5, text='h_0:', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f') 
+        # 4
+        self.h0_lbl =  Label(self.frameParametros,width=5, text='h'+u'\u2080'+':', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f')
         self.h0_lbl.place(x=30,y=180)
 
         self.h0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=('math', 15, 'bold italic'))
         self.h0_in.place(x=120,y=180)
 
-        #5
+        # 5
         self.T_lbl =  Label(self.frameParametros,width=5, text='T:', font=('math', 15, 'bold italic'),fg = '#fff', bg ='#2b2c2f') 
         self.T_lbl.place(x=30,y=220)
 
@@ -234,7 +234,7 @@ class Interfaz:
     def cerrarAplicacion(self):
         MsgBox =  messagebox.askquestion ('Cerrar Aplicación','¿Está seguro que desea cerrar la aplicación?', icon = 'warning')
         if MsgBox == 'yes':
-            self.ventana.quit()
+            self.ventana.quit()     #FIXME Botón de cierre no funciona.
         else:
             messagebox.showinfo('Retornar','Será retornado a la aplicación')
     
