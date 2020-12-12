@@ -208,28 +208,28 @@ class Interfaz:
         self.n0_lbl =  Label(self.frameParametros,width=5, text='n_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
         self.n0_lbl.place(x=30,y=100)
 
-        self.n0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=self.fuente_sec)
+        self.n0_in = Entry(master=self.frameParametros, textvariable=self.n0, width=10, font=self.fuente_sec)
         self.n0_in.place(x=120,y=100)
 
         #3
         self.m0_lbl =  Label(self.frameParametros,width=5, text='m_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
         self.m0_lbl.place(x=30,y=140)
 
-        self.m0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=self.fuente_sec)
+        self.m0_in = Entry(master=self.frameParametros, textvariable=self.m0, width=10, font=self.fuente_sec)
         self.m0_in.place(x=120,y=140)
 
         #4
         self.h0_lbl =  Label(self.frameParametros,width=5, text='h_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
         self.h0_lbl.place(x=30,y=180)
 
-        self.h0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=self.fuente_sec)
+        self.h0_in = Entry(master=self.frameParametros, textvariable=self.h0, width=10, font=self.fuente_sec)
         self.h0_in.place(x=120,y=180)
 
         #5
         self.T_lbl =  Label(self.frameParametros,width=5, text='T:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
         self.T_lbl.place(x=30,y=220)
 
-        self.T_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=self.fuente_sec)
+        self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=10, font=self.fuente_sec)
         self.T_in.place(x=120,y=220)
         
     def placeHolderFn(self):
