@@ -87,6 +87,7 @@ class Interfaz:
         self.frameParametros.place(x=0,y=305)
 
     	# ================================ Variables para las formulas ================================
+        self.fig = None
         self.opcion =  IntVar()
         self.Vm_0 = StringVar()
         self.n0 = StringVar()
@@ -151,15 +152,15 @@ class Interfaz:
         self.titulo_intencidad.place(x=460,y=10)
 
         # intensidad corriente para corriente constante
-        self.intencidad1_in = Entry(master=self.frameCorriente, textvariable=self.intencidad1, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
-        self.intencidad1_in.place(x=470,y=50)
+        self.intensidad1_in = Entry(master=self.frameCorriente, textvariable=self.intensidad1, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
+        self.intensidad1_in.place(x=470,y=50)
 
         self.ma_decor1 =  Label(self.frameCorriente,width=2, text='mA', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2) 
         self.ma_decor1.place(x=540,y=50)
 
         # intensidad corriente para corriente variable
-        self.intencidad2_in = Entry(master=self.frameCorriente, textvariable=self.intencidad2, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
-        self.intencidad2_in.place(x=470,y=90)
+        self.intensidad2_in = Entry(master=self.frameCorriente, textvariable=self.intensidad2, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
+        self.intensidad2_in.place(x=470,y=90)
 
 
         self.ma_decor1 =  Label(self.frameCorriente,width=2, text='mA', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2) 
@@ -168,10 +169,10 @@ class Interfaz:
         # desactivo las entradas hasta que se seleccione un tipo de corriente y le cambio el bg para que se vea cool
         self.tiempo1_in.configure(state="disabled", disabledbackground=self.color_3)
         self.tiempo2_in.configure(state="disabled", disabledbackground=self.color_3)
-        self.intencidad1_in.configure(state="disabled", disabledbackground=self.color_3)
+        self.intensidad1_in.configure(state="disabled", disabledbackground=self.color_3)
         self.tiempo3_in.configure(state="disabled", disabledbackground=self.color_3)
         self.tiempo4_in.configure(state="disabled", disabledbackground=self.color_3)
-        self.intencidad2_in.configure(state="disabled", disabledbackground=self.color_3)
+        self.intensidad2_in.configure(state="disabled", disabledbackground=self.color_3)
         
 
 
@@ -245,15 +246,19 @@ class Interfaz:
         self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=10, font=self.fuente_sec)
         self.T_in.place(x=120,y=220)
         
+
     def placeHolderFn(self):
-        fig = plt.Figure(figsize=(4, 3), dpi=140)
+        if self.fig is None:
+            self.fig = plt.Figure(figsize=(4, 3), dpi=100)
         t = np.arange(0,10, 0.01)
-        fig.add_subplot(111).plot(t, self.fun(t))     # subplot(filas, columnas, item)
-        fig.suptitle(self.opcion.get())
-        plt.close()
+        self.fig.add_subplot(111).plot(t, self.fun(t))     # subplot(filas, columnas, item)
+        self.fig.suptitle(self.opcion.get())
         plt.style.use('seaborn-darkgrid')
-        Plot = FigureCanvasTkAgg(fig, master=self.frameGrafica)
+        Plot = FigureCanvasTkAgg(self.fig, master=self.frameGrafica)
         Plot.draw()
+        toolbar = NavigationToolbar2Tk(Plot, self.frameGrafica, pack_toolbar=False)
+        toolbar.update()
+        toolbar.place(x=0, y=200 )
         Plot.get_tk_widget().place(x=8,y=8)
 
     def fun(self, t):
@@ -270,17 +275,17 @@ class Interfaz:
         if opt == 1:
             self.tiempo1_in.configure(state="normal")
             self.tiempo2_in.configure(state="normal")
-            self.intencidad1_in.configure(state="normal")
+            self.intensidad1_in.configure(state="normal")
             self.tiempo3_in.configure(state="disabled")
             self.tiempo4_in.configure(state="disabled")
-            self.intencidad2_in.configure(state="disabled")
+            self.intensidad2_in.configure(state="disabled")
         elif opt == 2:
             self.tiempo1_in.configure(state="normal")
             self.tiempo2_in.configure(state="normal")
-            self.intencidad1_in.configure(state="normal")
+            self.intensidad1_in.configure(state="normal")
             self.tiempo3_in.configure(state="normal")
             self.tiempo4_in.configure(state="normal")
-            self.intencidad2_in.configure(state="normal")
+            self.intensidad2_in.configure(state="normal")
 
 
     def cerrarAplicacion(self):
@@ -288,7 +293,8 @@ class Interfaz:
         '''
         MsgBox =  messagebox.askquestion ('Cerrar Aplicación','¿Está seguro que desea cerrar la aplicación?', icon = 'warning')
         if MsgBox == 'yes':
-            self.ventana.quit()     #FIXME Botón de cierre no funciona.
+            self.ventana.destroy()     #FIXME Botón de cierre no funciona.
+            self.ventana.quit()
         else:
             messagebox.showinfo('Retornar','Será retornado a la aplicación')
     

@@ -444,3 +444,5 @@ plt.plot(t,Vm_RK2,'blue')
 plt.plot(t,Vm_RK4,'purple')
 
 plt.legend(["For","Back","Mod","RK2","RK4"]) # Eliminar línea después de probar que funciona.
+
+plt.show()
