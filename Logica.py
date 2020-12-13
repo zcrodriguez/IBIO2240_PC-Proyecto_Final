@@ -422,49 +422,52 @@ def SCIPY(V_m0, n_0, m_0, h_0, T, opcion, t1, t2, t3, t4, I1, I2, h_res=0.01):
     return t, Vm_Scipy
 
 ## 0. THIS IS ONLY A TEST :V TODO Borrar después de probar
+# este test se pude dejar, al hacer veridicacion de main hago que no se ejecute esta parte del codigo al importalo
+if __name__ == '__main__':
+    plt.figure()
+    rcParams['font.family'] = 'serif'   # Define que las fuentes usadas en el gráfico son serifadas.
 
-plt.figure()
-rcParams['font.family'] = 'serif'   # Define que las fuentes usadas en el gráfico son serifadas.
+    plt.xlabel(r'$t\ \ [mS]$',fontsize='x-large')       # Título secundario del eje x
+    plt.ylabel(r'$V_m\ [mV]$ ',fontsize='large')        # Título secundario del eje y
+    plt.style.use('bmh')
 
-plt.xlabel(r'$t\ \ [mS]$',fontsize='x-large')       # Título secundario del eje x
-plt.ylabel(r'$V_m\ [mV]$ ',fontsize='large')        # Título secundario del eje y
-plt.style.use('bmh')
+    plt.title('Potencial de acción de una neurona', fontsize='x-large')
+    plt.tight_layout(pad=2.0)
 
-plt.title('Potencial de acción de una neurona', fontsize='x-large')
-plt.tight_layout(pad=2.0)
+    # ESTOS SON LOS VALORES POR DEFECTO QUE UTILICÉ PARA PROBAR QUE ESTA VAINA FUNCIONA.
+    V_m0 = -65.0;   n_0 = 0.30;     m_0 = 0.05;     h_0 = 0.60
+    T = 10.0
 
-# ESTOS SON LOS VALORES POR DEFECTO QUE UTILICÉ PARA PROBAR QUE ESTA VAINA FUNCIONA.
-V_m0 = -65.0;   n_0 = 0.30;     m_0 = 0.05;     h_0 = 0.60
-T = 10.0
+    opcion = 1
+    t1 = 50.0;      t2 = 100.0;      t3 = 150.0;     t4 = 200.0
+    I1 = 20.0;                      I2 = -15.0
+    ##
+    t_eFor,V_eFor = EulerFor(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
+    plt.plot(t_eFor,V_eFor,color='red',label="For")
+    plt.legend()
+    ##
+    t_eBack,V_eBack = EulerBack(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
+    plt.plot(t_eBack,V_eBack,color='#fbb901',label="Back")
+    plt.legend()
 
-opcion = 1
-t1 = 10.0;      t2 = 50.0;      t3 = 100.0;     t4 = 150.0
-I1 = 20.0;                      I2 = -15.0
-##
-t_eFor,V_eFor = EulerFor(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-plt.plot(t_eFor,V_eFor,color='red',label="For")
-plt.legend()
-##
-t_eBack,V_eBack = EulerBack(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-plt.plot(t_eBack,V_eBack,color='#fbb901',label="Back")
-plt.legend()
+    ##
+    t_eMod,V_eMod = EulerMod(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
+    plt.plot(t_eMod,V_eMod,color='darkgreen',label="Mod")
+    plt.legend()
 
-##
-t_eMod,V_eMod = EulerMod(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-plt.plot(t_eMod,V_eMod,color='darkgreen',label="Mod")
-plt.legend()
+    ##
+    t_RK2,V_RK2 = RK2(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
+    plt.plot(t_RK2,V_RK2,color='blue',label="RK2")
+    plt.legend()
 
-##
-t_RK2,V_RK2 = RK2(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-plt.plot(t_RK2,V_RK2,color='blue',label="RK2")
-plt.legend()
+    ##
+    t_RK4,V_RK4 = RK4(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
+    plt.plot(t_RK4,V_RK4,color='purple',label="RK4")
+    plt.legend()
 
-##
-t_RK4,V_RK4 = RK4(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-plt.plot(t_RK4,V_RK4,color='purple',label="RK4")
-plt.legend()
+    ##
+    t_Scipy, V_Scipy = SCIPY(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
+    plt.plot(t_Scipy,V_Scipy,color='black',label="Scipy")
+    plt.legend()
 
-##
-t_Scipy, V_Scipy = SCIPY(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-plt.plot(t_Scipy,V_Scipy,color='black',label="Scipy")
-plt.legend()
+    plt.show()

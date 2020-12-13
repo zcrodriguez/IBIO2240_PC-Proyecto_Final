@@ -1,27 +1,26 @@
 # imports
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+import matplotlib.pyplot as plt # manipulacion de graficas
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk) # graficas y toolbar de graficas
 from matplotlib.backend_bases import key_press_handler
-from matplotlib import rcParams     # Esto es para modificar el estilo de fuente de los gráficos.
-
-
-import matplotlib.animation as animation
+from matplotlib.font_manager import FontProperties    # Esto es para modificar el estilo de fuente de los gráficos.
 import matplotlib
+from tkinter import *               # wild card import para evitar llamar tk cada vez
+from tkinter import filedialog      # elegir archivos
+from tkinter import messagebox      # mensaje de cerrar
+from PIL import ImageTk ,Image      # insersion de imagenes
+import tkinter.font as font         # mas fuentes
+from Logica import *                # importo todos los metodos implementados en la logica
+# parametros iniciales de matplotlib
 matplotlib.use("TkAgg")
 
-from tkinter import *
-from tkinter import filedialog
-from tkinter import messagebox
-from PIL import ImageTk ,Image
-import tkinter.font as font
-from matplotlib import style
-
-# clase principal
 
 class Interfaz:
+    ''' Clase que modela toda la interfaz del app, por comodidad y orden se define asi y se llama en la llave main al final del script
+    '''
 
     def __init__(self, ventanta):
+        # algunas variables que se usaran a lo largo de la aplicacion
         self.ventana = ventanta
         self.ventana.title('Potencial de accion de la neurona')
         self.fuente_ppal = font.Font(family='math')
@@ -87,9 +86,23 @@ class Interfaz:
         # frame del los parametros
         self.frameParametros = Frame(self.frameRight, bd = 5, height=300, width=285 , bg=self.color_2)
         self.frameParametros.place(x=0,y=305)
-
+        # ================================ Grafica ===========================================
+        plt.style.use('bmh')
+        self.fig = plt.Figure(figsize=(5.75, 4.0))
+        self.plot = self.fig.add_subplot(1,1,1)
+        grafFont = FontProperties()
+        grafFont.set_family('serif')   # Define que las fuentes usadas en el gráfico son serifadas.
+        self.plot.set_xlabel(r'$t\ \ [mS]$',fontsize='x-large', fontproperties=grafFont)       # Título secundario del eje x
+        self.plot.set_ylabel(r'$V_m\ [mV]$ ',fontsize='large', fontproperties=grafFont)        # Título secundario del eje y
+            
+        self.plot.set_title('Potencial de acción de una neurona', fontsize='x-large', fontproperties=grafFont)
+        self.fig.tight_layout()
+        self.imagenGrafica = FigureCanvasTkAgg(self.fig, master=self.frameGrafica)
+        self.imagenGrafica.get_tk_widget().place(x=0,y=0)
+        self.herramientasGrafica = NavigationToolbar2Tk(self.imagenGrafica, self.frameGrafica, pack_toolbar=False)
+        self.herramientasGrafica.update()
+        self.herramientasGrafica.place(x=0, y=400)
     	# ================================ Variables para las formulas ================================
-        self.fig = None
         self.opcion =  IntVar()
         self.Vm_0 = StringVar()
         self.n0 = StringVar()
@@ -102,6 +115,20 @@ class Interfaz:
         self.tiempo4 = StringVar()
         self.intensidad1 = StringVar()
         self.intensidad2 = StringVar()
+        # ================================ Valores Defecto ==================================
+        self.opcion.set(1)
+        self.Vm_0.set('-65.0')
+        self.n0.set('0.30')
+        self.m0.set('0.05')
+        self.h0.set('0.60')
+        self.T.set('10.0')
+        self.tiempo1.set('50.0')
+        self.tiempo2.set('100.0')
+        self.tiempo3.set('150.0')
+        self.tiempo4.set('200.0')
+        self.intensidad1.set('20.0')
+        self.intensidad2.set('-15.0')
+
         # ================================ Contenido ==================================
 
         # contenido de corriente
@@ -169,9 +196,7 @@ class Interfaz:
         self.ma_decor1.place(x=540,y=90)
 
         # desactivo las entradas hasta que se seleccione un tipo de corriente y le cambio el bg para que se vea cool
-        self.tiempo1_in.configure(state="disabled", disabledbackground=self.color_3)
-        self.tiempo2_in.configure(state="disabled", disabledbackground=self.color_3)
-        self.intensidad1_in.configure(state="disabled", disabledbackground=self.color_3)
+
         self.tiempo3_in.configure(state="disabled", disabledbackground=self.color_3)
         self.tiempo4_in.configure(state="disabled", disabledbackground=self.color_3)
         self.intensidad2_in.configure(state="disabled", disabledbackground=self.color_3)
@@ -183,20 +208,23 @@ class Interfaz:
 
         self.metodos_lbl.place(x=35,y=10)
 
-        self.eulerfw_btn = Button(master=self.frameMetodos, text="Euler Adelante",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20,height=1, font=self.fuente_ppal,border="0")
+        self.eulerfw_btn = Button(master=self.frameMetodos, text="Euler Adelante",  command = self.llamadoEulerFor, bg=self.color_3, fg = self.color_blanco,  width=20,height=1, font=self.fuente_ppal,border="0")
         self.eulerfw_btn.place(x=45,y=60)
 
-        self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atrás",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atrás",  command = self.llamadoEulerBack, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulerbk_btn.place(x=45,y=100)
 
-        self.eulermod_btn = Button(master=self.frameMetodos, text="Euler Mod",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.eulermod_btn = Button(master=self.frameMetodos, text="Euler Mod",  command = self.llamadoEulerMod, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulermod_btn.place(x=45,y=140)
 
-        self.rk2_btn = Button(master=self.frameMetodos, text="Runge-Kutta 2",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.rk2_btn = Button(master=self.frameMetodos, text="Runge-Kutta 2",  command = self.llamadoRK2, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk2_btn.place(x=45,y=180)
 
-        self.rk4_btn = Button(master=self.frameMetodos, text="Runge-Kutta 4",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.rk4_btn = Button(master=self.frameMetodos, text="Runge-Kutta 4",  command = self.llamadoRK4, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk4_btn.place(x=45,y=220)
+
+        self.scipy_btn = Button(master=self.frameMetodos, text="Scipy",  command = self.llamadoScipy, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.scipy_btn.place(x=45,y=260)
 
         # contenido de parametros
         # titulo
@@ -247,54 +275,78 @@ class Interfaz:
 
         self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=10, font=self.fuente_sec)
         self.T_in.place(x=120,y=220)
-        
+    
 
-    def placeHolderFn(self):
-        if self.fig is None:
-            self.fig = plt.Figure(figsize=(4, 3), dpi=100)
-        t = np.arange(0,10, 0.01)
-        self.fig.add_subplot(111).plot(t, self.fun(t))     # subplot(filas, columnas, item)
-        self.fig.suptitle(self.opcion.get())
+    def actualizarParametros(self):
+        pVm0 = float(self.Vm_0.get())
+        pN0 = float(self.n0.get())
+        pM0 = float(self.m0.get())
+        pH0 = float(self.h0.get())
+        pT = float(self.T.get())
+        pOpcion = int(self.opcion.get())
+        pTiempo1=float(self.tiempo1.get())
+        pTiempo2=float(self.tiempo2.get())
+        pTiempo3=0
+        pTiempo4=0
+        pIntensidad1=float(self.intensidad1.get())
+        pIntensidad2=0
+        if pOpcion == 2:
+            pTiempo3=float(self.tiempo3.get())
+            pTiempo4=float(self.tiempo4.get())
+            pIntensidad2=float(self.intensidad2.get())
+        return (pVm0,pN0,pM0,pH0,pT,pOpcion,pTiempo1,pTiempo2,pTiempo3,pTiempo4,pIntensidad1,pIntensidad2)
 
-        '''
-        rcParams['font.family'] = 'serif'   # Define que las fuentes usadas en el gráfico son serifadas.
-        plt.xlabel(r'$t\ \ [mS]$',fontsize='x-large')       # Título secundario del eje x
-        plt.ylabel(r'$V_m\ [mV]$ ',fontsize='large')        # Título secundario del eje y
-        plt.style.use('bmh')
-        
-        plt.title('Potencial de acción de una neurona', fontsize='x-large')
-        plt.tight_layout(pad=2.0)
-        '''
 
-        Plot = FigureCanvasTkAgg(self.fig, master=self.frameGrafica)
-        Plot.draw()
-        toolbar = NavigationToolbar2Tk(Plot, self.frameGrafica, pack_toolbar=False)
-        toolbar.update()
-        toolbar.place(x=0, y=200 )
-        Plot.get_tk_widget().place(x=8,y=8)
+    def llamadoEulerFor(self):
+        parametros = self.actualizarParametros()
+        t_eFor,V_eFor = EulerFor(*parametros)
+        self.plot.plot(t_eFor, V_eFor)
+        self.imagenGrafica.draw()
 
-    def fun(self, t):
-        opt = self.opcion.get()
-        if opt == 1:
-            return np.sin(t)
-        elif opt == 2:
-            return np.cos(t)
+
+    def llamadoEulerBack(self):
+        parametros = self.actualizarParametros()
+        t_eBack,V_eBack = EulerBack(*parametros)
+        self.plot.plot(t_eBack,V_eBack)
+        self.imagenGrafica.draw()
+
+
+    def llamadoEulerMod(self):
+        parametros = self.actualizarParametros()
+        t_eMod,V_eMod = EulerMod(*parametros)
+        self.plot.plot(t_eMod, V_eMod)
+        self.imagenGrafica.draw()
+
+
+    def llamadoRK2(self):
+        parametros = self.actualizarParametros()
+        t_RK2,V_RK2 = RK2(*parametros)
+        self.plot.plot(t_RK2, V_RK2)
+        self.imagenGrafica.draw()
+    
+
+    def llamadoRK4(self):
+        parametros = self.actualizarParametros()
+        t_RK4,V_RK4 = RK4(*parametros)
+        self.plot.plot(t_RK4, V_RK4)
+        self.imagenGrafica.draw()
+    
+    def llamadoScipy(self):
+        parametros = self.actualizarParametros()
+        t_SCIPY,V_SCIPY = SCIPY(*parametros)
+        self.plot.plot(t_SCIPY, V_SCIPY)
+        self.imagenGrafica.draw()
+
 
     def estadoEntradaCorriente(self):
         ''' Funcion que activa las entradas correspondientes a la opcion de corriente indicacda en la variable opcion, 1 para corriente constante y 2 para corriente variable
         '''
         opt = self.opcion.get()
         if opt == 1:
-            self.tiempo1_in.configure(state="normal")
-            self.tiempo2_in.configure(state="normal")
-            self.intensidad1_in.configure(state="normal")
             self.tiempo3_in.configure(state="disabled")
             self.tiempo4_in.configure(state="disabled")
             self.intensidad2_in.configure(state="disabled")
         elif opt == 2:
-            self.tiempo1_in.configure(state="normal")
-            self.tiempo2_in.configure(state="normal")
-            self.intensidad1_in.configure(state="normal")
             self.tiempo3_in.configure(state="normal")
             self.tiempo4_in.configure(state="normal")
             self.intensidad2_in.configure(state="normal")
@@ -321,7 +373,6 @@ class Interfaz:
         except:
             pass
         
-    
 
     def cargarDatos(self):
         ''' Funcion que abre un dialogo para seleccionar un archivo del cual se cargaran los datos de una ejecucion previa en formato double
@@ -332,7 +383,6 @@ class Interfaz:
                 pass
         except:
             pass
-
 
 
     def iniciar(self):
