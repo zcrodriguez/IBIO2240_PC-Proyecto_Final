@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.backend_bases import key_press_handler
+from matplotlib import rcParams     # Esto es para modificar el estilo de fuente de los gráficos.
+
 
 import matplotlib.animation as animation
 import matplotlib
@@ -148,8 +150,8 @@ class Interfaz:
         self.ms_decor2.place(x=415,y=90)
 
         # titulo de las entradas de corriente
-        self.titulo_intencidad =  Label(self.frameCorriente,width=10, text='Intencidad', font=('math', 10, 'bold italic'),fg = self.color_blanco, bg =self.color_2) 
-        self.titulo_intencidad.place(x=460,y=10)
+        self.titulo_intensidad =  Label(self.frameCorriente,width=10, text='Intensidad', font=('math', 10, 'bold italic'),fg = self.color_blanco, bg =self.color_2)
+        self.titulo_intensidad.place(x=460,y=10)
 
         # intensidad corriente para corriente constante
         self.intensidad1_in = Entry(master=self.frameCorriente, textvariable=self.intensidad1, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
@@ -177,17 +179,17 @@ class Interfaz:
 
 
         # contenido de metodos de solucion, los nombres de las variables son lo suficientemente dicientes para saber que es cada cosa.
-        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solucion', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2) 
+        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solución', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2)
 
         self.metodos_lbl.place(x=35,y=10)
 
         self.eulerfw_btn = Button(master=self.frameMetodos, text="Euler Adelante",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20,height=1, font=self.fuente_ppal,border="0")
         self.eulerfw_btn.place(x=45,y=60)
 
-        self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atras",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atrás",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulerbk_btn.place(x=45,y=100)
 
-        self.eulermod_btn = Button(master=self.frameMetodos, text="Euler mod",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.eulermod_btn = Button(master=self.frameMetodos, text="Euler Mod",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulermod_btn.place(x=45,y=140)
 
         self.rk2_btn = Button(master=self.frameMetodos, text="Runge-Kutta 2",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
@@ -198,13 +200,13 @@ class Interfaz:
 
         # contenido de parametros
         # titulo
-        self.metodos_lbl =  Label(self.frameParametros, text='Parametros', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2) 
+        self.metodos_lbl =  Label(self.frameParametros, text='Parámetros', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2)
 
         self.metodos_lbl.place(x=75,y=10)
         # Parámetros
         # 1
 
-        self.Vm0_lbl =  Label(self.frameParametros,width=5, text='Vm_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+        self.Vm0_lbl =  Label(self.frameParametros,width=5, text='V'+u"\u2098\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
         
         self.Vm0_lbl.place(x=30,y=60)
 
@@ -213,7 +215,7 @@ class Interfaz:
         
         # 2
 
-        self.n0_lbl =  Label(self.frameParametros,width=5, text='n_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+        self.n0_lbl =  Label(self.frameParametros,width=5, text='n'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
 
         self.n0_lbl.place(x=30,y=100)
 
@@ -221,7 +223,7 @@ class Interfaz:
         self.n0_in.place(x=120,y=100)
 
         #3
-        self.m0_lbl =  Label(self.frameParametros,width=5, text='m_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+        self.m0_lbl =  Label(self.frameParametros,width=5, text='m'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
 
         self.m0_lbl.place(x=30,y=140)
 
@@ -230,7 +232,7 @@ class Interfaz:
 
 
         #4
-        self.h0_lbl =  Label(self.frameParametros,width=5, text='h_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+        self.h0_lbl =  Label(self.frameParametros,width=5, text='h'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
 
         self.h0_lbl.place(x=30,y=180)
 
@@ -253,7 +255,17 @@ class Interfaz:
         t = np.arange(0,10, 0.01)
         self.fig.add_subplot(111).plot(t, self.fun(t))     # subplot(filas, columnas, item)
         self.fig.suptitle(self.opcion.get())
-        plt.style.use('seaborn-darkgrid')
+
+        '''
+        rcParams['font.family'] = 'serif'   # Define que las fuentes usadas en el gráfico son serifadas.
+        plt.xlabel(r'$t\ \ [mS]$',fontsize='x-large')       # Título secundario del eje x
+        plt.ylabel(r'$V_m\ [mV]$ ',fontsize='large')        # Título secundario del eje y
+        plt.style.use('bmh')
+        
+        plt.title('Potencial de acción de una neurona', fontsize='x-large')
+        plt.tight_layout(pad=2.0)
+        '''
+
         Plot = FigureCanvasTkAgg(self.fig, master=self.frameGrafica)
         Plot.draw()
         toolbar = NavigationToolbar2Tk(Plot, self.frameGrafica, pack_toolbar=False)
