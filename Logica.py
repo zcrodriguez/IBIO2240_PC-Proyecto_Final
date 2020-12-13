@@ -1,3 +1,4 @@
+##
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
@@ -261,7 +262,9 @@ def FAux_EulerBack(Aux, I, Vm, n, m, h, phi_val, h_res):
             m + h_res * dm_dt(phi_val, Aux[0], Aux[2]) - Aux[2],
             h + h_res * dh_dt(phi_val, Aux[0], Aux[3]) - Aux[3]]
 
-# EULER HACIA ADELANTE (BACKWARD)
+
+# EULER MODIFICADO (MOD)
+# y_i = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)]    →   0 = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)] - y_i
 
 def FAux_EulerMod(Aux, I, Vm, n, m, h, phi_val, h_res):
     return [Vm + (h_res / 2.0) * (dV_dt(I, Vm, n, m, h) + dV_dt(I, Aux[0], Aux[1], Aux[2], Aux[3])) - Aux[0],
@@ -275,6 +278,7 @@ def FAux_EulerMod(Aux, I, Vm, n, m, h, phi_val, h_res):
 
 # Se crea un procedimiento iterativo que recorre por completo el arreglo de tiempo desde
 # la segunda posición hasta la última.
+
 
 # I. EULER FORWARD
 # Las ecuaciones fueron formuladas siguiendo el formato y_(i) = y_(i-1)+h[F(y_(i-1))]
@@ -307,6 +311,8 @@ for iter in range(1, len(t)):
 
 # III. EULER MOD
 # Las ecuaciones fueron despejadas siguiendo el formato y_(i) = y_(i-1)+h/2*[F(y_(i-1))+F(y_(i))]
+
+for iter in range(1, len(t)):
     ModRoots = opt.fsolve(FAux_EulerMod, np.array([Vm_EulerMod[iter - 1],
                                                    n_EulerMod[iter - 1],
                                                    m_EulerMod[iter - 1],
@@ -319,16 +325,122 @@ for iter in range(1, len(t)):
     m_EulerMod[iter] = ModRoots[2]
     h_EulerMod[iter] = ModRoots[3]
 
+
 # IV. RUNGE-KUTTA 2 (RK2)
-# TODO [Caro] Transcribir las ecuaciones que hice en papel.
+#   * Ki1 = F(y_(i-1))                   * Ki2 = F(y_(i-1) + k1 * h_res)
+
+for iter in range(1, len(t)):
+
+    k11 = dV_dt(I_array[iter], Vm_RK2[iter-1], n_RK2[iter-1], m_RK2[iter-1], h_RK2[iter-1])
+    k21 = dn_dt(phi_val, Vm_RK2[iter-1], n_RK2[iter-1])
+    k31 = dm_dt(phi_val, Vm_RK2[iter-1], m_RK2[iter-1])
+    k41 = dh_dt(phi_val, Vm_RK2[iter-1], h_RK2[iter-1])
+
+    k12 = dV_dt(I_array[iter],
+                Vm_RK2[iter-1] + h_res * k11,
+                n_RK2[iter-1] + h_res * k21,
+                m_RK2[iter-1] + h_res * k31,
+                h_RK2[iter-1] + h_res * k41
+                )
+    k22 = dn_dt(phi_val, Vm_RK2[iter-1] + h_res * k11, n_RK2[iter-1] + h_res * k21)
+    k32 = dm_dt(phi_val, Vm_RK2[iter-1] + h_res * k11, m_RK2[iter-1] + h_res * k31)
+    k42 = dh_dt(phi_val, Vm_RK2[iter-1] + h_res * k11, h_RK2[iter-1] + h_res * k41)
+
+    Vm_RK2[iter] = Vm_RK2[iter - 1] + (h_res / 2.0) * (k11 + k12)
+    n_RK2[iter] = n_RK2[iter - 1] + (h_res / 2.0) * (k21 + k22)
+    m_RK2[iter] = m_RK2[iter - 1] + (h_res / 2.0) * (k31 + k32)
+    h_RK2[iter] = h_RK2[iter - 1] + (h_res / 2.0) * (k41 + k42)
 
 
 # V. RUNGE-KUTTA 4 (RK4)
 
+#   * Ki1 = F(y_(i-1))
+#   * Ki2 = F(y_(i-1) + 0.5 * k1 * h_res)
+#   * Ki3 = F(y_(i-1) + 0.5 * k2 * h_res)
+#   * Ki4 = F(y_(i-1) + k3 * h_res)
+
+for iter in range(1, len(t)):
+    k11 = dV_dt(I_array[iter], Vm_RK4[iter - 1], n_RK4[iter - 1], m_RK4[iter - 1], h_RK4[iter - 1])
+    k21 = dn_dt(phi_val, Vm_RK4[iter - 1], n_RK4[iter - 1])
+    k31 = dm_dt(phi_val, Vm_RK4[iter - 1], m_RK4[iter - 1])
+    k41 = dh_dt(phi_val, Vm_RK4[iter - 1], h_RK4[iter - 1])
+
+    k12 = dV_dt(I_array[iter],
+                Vm_RK4[iter - 1] + 0.5 * h_res * k11,
+                n_RK4[iter - 1] + 0.5 * h_res * k21,
+                m_RK4[iter - 1] + 0.5 * h_res * k31,
+                h_RK4[iter - 1] + 0.5 * h_res * k41
+                )
+    k22 = dn_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k11, n_RK4[iter - 1] + 0.5 * h_res * k21)
+    k32 = dm_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k11, m_RK4[iter - 1] + 0.5 * h_res * k31)
+    k42 = dh_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k11, h_RK4[iter - 1] + 0.5 * h_res * k41)
+
+    k13 = dV_dt(I_array[iter],
+                Vm_RK4[iter - 1] + 0.5 * h_res * k12,
+                n_RK4[iter - 1] + 0.5 * h_res * k22,
+                m_RK4[iter - 1] + 0.5 * h_res * k32,
+                h_RK4[iter - 1] + 0.5 * h_res * k42
+                )
+    k23 = dn_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k12, n_RK4[iter - 1] + 0.5 * h_res * k22)
+    k33 = dm_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k12, m_RK4[iter - 1] + 0.5 * h_res * k32)
+    k43 = dh_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k12, h_RK4[iter - 1] + 0.5 * h_res * k42)
+
+    k14 = dV_dt(I_array[iter],
+                Vm_RK4[iter - 1] + h_res * k13,
+                n_RK4[iter - 1] + h_res * k23,
+                m_RK4[iter - 1] + h_res * k33,
+                h_RK4[iter - 1] + h_res * k43
+                )
+    k24 = dn_dt(phi_val, Vm_RK4[iter - 1] + h_res * k13, n_RK4[iter - 1] + h_res * k23)
+    k34 = dm_dt(phi_val, Vm_RK4[iter - 1] + h_res * k13, m_RK4[iter - 1] + h_res * k33)
+    k44 = dh_dt(phi_val, Vm_RK4[iter - 1] + h_res * k13, h_RK4[iter - 1] + h_res * k43)
+
+    Vm_RK4[iter] = Vm_RK4[iter - 1] + (h_res / 6.0) * (k11 + 2.0 * k12 + 2.0 * k13 + k14)
+    n_RK4[iter] = n_RK4[iter - 1] + (h_res / 6.0) * (k21 + 2.0 * k22 + 2.0 * k23 + k24)
+    m_RK4[iter] = m_RK4[iter - 1] + (h_res / 6.0) * (k31 + 2.0 * k32 + 2.0 * k33 + k34)
+    h_RK4[iter] = h_RK4[iter - 1] + (h_res / 6.0) * (k41 + 2.0 * k42 + 2.0 * k43 + k44)
 
 
-# Gráfico de las soluciones
+## 0. Se crea el canvas en el que se graficarán las curvas.
+# TODO supongo que habrá que lograr que esto se inicialice al abrir la interfaz.
+
 plt.figure()
-plt.plot(t,Vm_EulerFor)
-plt.plot(t,Vm_EulerBack)
-plt.plot(t,Vm_EulerMod)
+rcParams['font.family'] = 'serif'   # Define que las fuentes usadas en el gráfico son serifadas.
+
+plt.xlabel(r'$t\ \ [mS]$',fontsize='x-large')       # Título secundario del eje x
+plt.ylabel(r'$V_m\ [mV]$ ',fontsize='large')        # Título secundario del eje y
+plt.style.use('bmh')
+
+plt.title('Potencial de acción de una neurona', fontsize='x-large')
+plt.tight_layout(pad=2.0)
+
+
+# I. Gráfico de curva de Euler hacia adelante (Forward)
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+
+plt.plot(t,Vm_EulerFor,color='red')
+
+# II. Gráfico de curva de Euler hacia atrás (Backward)
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+
+plt.plot(t,Vm_EulerBack,color='#fbb901')
+
+# III. Gráfico de curva de Euler Modificado (Backward)
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+plt.plot(t,Vm_EulerMod,'darkgreen')
+
+# IV. Gráfico de curva de Runge-Kutta 2.
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+
+plt.plot(t,Vm_RK2,'blue')
+
+# V. Gráfico de curva de Runge-Kutta 2.
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+plt.plot(t,Vm_RK4,'purple')
+
+plt.legend(["For","Back","Mod","RK2","RK4"]) # Eliminar línea después de probar que funciona.
