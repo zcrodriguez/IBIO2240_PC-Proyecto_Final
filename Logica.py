@@ -1,5 +1,9 @@
+##
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.optimize as opt
+import scipy.integrate as inte
+from scipy.integrate import odeint
 from matplotlib import rcParams     # Esto es para modificar el estilo de fuente de los gráficos.
 
 
@@ -31,31 +35,32 @@ E_L = -54.4     # [mV]
 C_M = 1.0       # [µF/cm^2]
 
 
+
 # ===============================            CONSTANTES DEL I-ÉSIMO CANAL IÓNICO         ===============================
 
-# β_m(V)
-def beta_m(V):
-    return 4.0 * np.exp(-(V + 65.0) / 18.0)
+# β_m(Vm)
+def beta_m(Vm):
+    return 4.0 * np.exp(-(Vm + 65.0) / 18.0)
 
-# α_h(V)
-def alpha_h(V):
-    return 0.07 * np.exp(-(V + 65.0) / 20.0)
+# α_h(Vm)
+def alpha_h(Vm):
+    return 0.07 * np.exp(-(Vm + 65.0) / 20.0)
 
-# β_h(V)
-def beta_h(V):
-    return 1.0 / (1.0 + np.exp(-(V + 35.0) / 10.0))
+# β_h(Vm)
+def beta_h(Vm):
+    return 1.0 / (1.0 + np.exp(-(Vm + 35.0) / 10.0))
 
-# α_n(V)
-def alpha_n(V):
-    return (0.01 * (V + 55.0)) / (1.0 - np.exp(-(V + 55.0) / 10.0))
+# α_n(Vm)
+def alpha_n(Vm):
+    return (0.01 * (Vm + 55.0)) / (1.0 - np.exp(-(Vm + 55.0) / 10.0))
 
-# β_n(V)
-def beta_n(V):
-    return 0.125 * np.exp(-(V + 65.0) / 80.0)
+# β_n(Vm)
+def beta_n(Vm):
+    return 0.125 * np.exp(-(Vm + 65.0) / 80.0)
 
-# α_m(V)
-def alpha_m(V):
-    return (0.1 * (V + 40.0)) / (1.0 - np.exp(-(V + 40.0) / 10.0))
+# α_m(Vm)
+def alpha_m(Vm):
+    return (0.1 * (Vm + 40.0)) / (1.0 - np.exp(-(Vm + 40.0) / 10.0))
 
 
 
@@ -69,49 +74,60 @@ Q_10 = 3
 T_base = 6.3    # [°C]
 
 # Factor de temperatura (Φ(T))
-# TODO Revisar si esto amerita funcion o puede ser una constante, considerando de que T es ingresada por el usuario.
-# Si phi se vuelve constante en vez de función (lo cual a lo mejor tiene más sentido) hay que modificar
-# las ecuaciones diferenciales.
-
 def phi(T):
-    return (Q_10)**((T - T_base) / 10.0)
+    return (Q_10) ** ((T - T_base) / 10.0)
 
 # Temperatura inresada por usuario
-T = 10.0    # [°C]      TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
+T = 10.0    # [°C]      TODO Conectar este parámetro con interfaz. Lo ingresa el usuario.
+
+# Valor de phi para la temperatura T ingresada por el usuario.
 phi_val = phi(T)
 
 
-# ========================================            TIEMPO (t)         =========================================
-# TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
-# Tiempo inicial (T0) y final (Tf) de simulación
-t_0 = 0.0   # [mS]      Valor de prueba
-t_f = 500.0  # [mS]     Valor de prueba
-
-# Se define un valor para h (Resolución de la respuesta / Step).
-h = 0.01    # [mS]
-
-# Se crea el arreglo de tiempo que va desde To a Tf con pasos de h
-t = np.arange(t_0,t_f+h,h)
-
 
 # ========================================            CORRIENTE (I(t))         =========================================
-# TODO Plantear la rutina que permita generar los arreglos de corriente.
 
-# Corriente Continua
-# Corriente ingresada por el usuario en el intervalo de tiempo indicado por el usuario en la GUI.
+# PARTE I - TIEMPO (t)
 
-# Corriente Variable
-# Corrientes ingresadas por el usuario en los dos (2) intervalos de tiempo indicados por el usuario en la GUI.
+# Determina si la corriente es fija o variable TODO Traer info desde la interfaz
+I_is_var = True
 
-# Arreglo mock
-# TODO Conectar los intervalos de tiempo dados por el usuario con los arreglos de corriente.
-I_array = np.zeros(len(t))
-IInd = np.where((t>=10)&(t<=50))
-I_array[IInd] = 20.0
-IInd = np.where((t>=100)&(t<=150))
-I_array[IInd] = 50.0
-IInd = np.where((t>=300)&(t<=350))
-I_array[IInd] = -15.0
+# Intervalo 1   TODO Traer valor inicial y final del intervalo 1 desde la interfaz.
+t_i1 = 10.0
+t_f1 = 50.0
+
+# Intervalo 2   TODO Traer valor inicial y final del intervalo 2 desde la interfaz.
+t_i2 = 100.0
+t_f2 = 150.0
+
+# Tiempo inicial (T0) y final (Tf) de simulación (graficado)
+t_0 = 0.0   # [mS]
+t_f = (t_f2 if I_is_var else t_f1) + 50.0  # [mS]
+
+# Se define un valor para h (Resolución de la respuesta / Step).
+h_res = 0.01    # [mS]
+
+# Se crea el arreglo de tiempo que va desde To a Tf con pasos de h
+t = np.arange(t_0, t_f + h_res, h_res)
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+# PARTE II - Corriente (I(t))
+
+I_array = np.zeros(len(t))      # Se crea el arreglo que almacena la corriente respecto al tiempo.
+
+I_1 =  9.0     # TODO Traer el valor de corriente del primer intervalo de la interfaz.
+I_2 = -9.0     # TODO Traer el valor de corriente del segundo intervalo de la interfaz.
+
+# Intervalo 1
+IInd = np.where((t >= t_i1) & (t <= t_f1))          # np.where retorna los t que están en el intervalo 1.
+I_array[IInd] = I_1                                 # Para los t hallados por np.where en el arreglo se asigna-
+
+# Intervalo 2 - Aplica cuando la corriente es variable.
+if I_is_var:
+    IInd = np.where((t >= t_i2) & (t <= t_f2))
+    I_array[IInd] = I_2
+
 
 
 '''=====================================================================================================================
@@ -121,16 +137,13 @@ I_array[IInd] = -15.0
 # PARTE I - ECUACIONES AUXILIARES
 
 # Corriente de Na+  [Ec (2)]
-def I_Na(V,m,h):
-    return g_Na * (m**3) * h * (V - E_Na)
+def I_Na(Vm, m, h): return g_Na * (m ** 3) * h * (Vm - E_Na)
 
 # Corriente de K+   [Ec (1)]
-def I_K(V,n):
-    return g_K * (n**4) * (V - E_K)
+def I_K(Vm, n): return g_K * (n ** 4) * (Vm - E_K)
 
 # Corriente de fuga L (Cl- y otros iones)   [Ec (3)]
-def I_L(V):
-    return g_L * (V - E_L)
+def I_L(Vm):    return g_L * (Vm - E_L)
 
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -138,14 +151,14 @@ def I_L(V):
 
 # Ecuación I - Hallada al despejar la ecuación de corriente I(t).    [Ec (5) y (6)]
 def dV_dt(I, Vm, n, m, h):
-    return ( I - I_L(Vm) - I_K(Vm,n) - I_Na(Vm,m,h) ) / ( C_M )
+    return (I - I_L(Vm) - I_K(Vm,n) - I_Na(Vm,m,h)) / (C_M)
 
 # Ecuación II
-def dn_dt(phi,Vm,n):
-    return phi* (alpha_n(Vm) * (1 - n) - beta_n(Vm) * n)
+def dn_dt(phi, Vm, n):
+    return phi * (alpha_n(Vm) * (1 - n) - beta_n(Vm) * n)
 
 # Ecuación III
-def dm_dt(phi,Vm,m):
+def dm_dt(phi, Vm, m):
     return phi * (alpha_m(Vm) * (1 - m) - beta_m(Vm) * m)
 
 # Ecuación IV
@@ -163,7 +176,7 @@ def dh_dt(phi,Vm,h):
 # Antes de que el usuario ingrese los valores deseados, deben haber unos valores iniciales 'by default' para
 # las incógnitas de tal forma que se pueda ejecutar el modelo.
 
-V_m0 = -65 #[mV]   # TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
+V_m0 = -65.0    #[mV]   TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
 
 # Valores de probabilidad: Estimados a partir de gráficos de los papers sugeridos.
 m_0 = 0.05      # TODO Conectar este parámeto con interfaz. Lo ingresa el usuario.
@@ -189,17 +202,16 @@ Vm_EulerMod[0] = V_m0
 Vm_RK2[0] = V_m0
 Vm_RK4[0] = V_m0
 
-
 # II. PROBABILIDAD DE n
 
-# Se crea un arreglo que almacena el V_m de en cada iteración.
+# Se crea un arreglo que almacena la probabilidad de n en cada iteración.
 n_EulerFor = np.zeros(len(t))
 n_EulerBack = np.zeros(len(t))
 n_EulerMod = np.zeros(len(t))
 n_RK2 = np.zeros(len(t))
 n_RK4 = np.zeros(len(t))
 
-# Se asigna el valor de la condicion inicial al primer valor. → V(t=0) = V_m0.
+# Se asigna el valor de la condicion inicial al primer valor. → n(t=0) = n_0.
 n_EulerFor[0] = n_0
 n_EulerBack[0] = n_0
 n_EulerMod[0] = n_0
@@ -208,14 +220,14 @@ n_RK4[0] = n_0
 
 # III. PROBABILIDAD DE m
 
-# Se crea un arreglo que almacena el V_m de en cada iteración.
+# Se crea un arreglo que almacena la probabilidad de m en cada iteración.
 m_EulerFor = np.zeros(len(t))
 m_EulerBack = np.zeros(len(t))
 m_EulerMod = np.zeros(len(t))
 m_RK2 = np.zeros(len(t))
 m_RK4 = np.zeros(len(t))
 
-# Se asigna el valor de la condicion inicial al primer valor. → V(t=0) = V_m0.
+# Se asigna el valor de la condicion inicial al primer valor. → m(t=0) = m_0.
 m_EulerFor[0] = m_0
 m_EulerBack[0] = m_0
 m_EulerMod[0] = m_0
@@ -224,14 +236,14 @@ m_RK4[0] = m_0
 
 # IV. PROBABILIDAD DE h
 
-# Se crea un arreglo que almacena el V_m de en cada iteración.
+# Se crea un arreglo que almacena la probabilidad de h en cada iteración.
 h_EulerFor = np.zeros(len(t))
 h_EulerBack = np.zeros(len(t))
 h_EulerMod = np.zeros(len(t))
 h_RK2 = np.zeros(len(t))
 h_RK4 = np.zeros(len(t))
 
-# Se asigna el valor de la condicion inicial al primer valor. → V(t=0) = V_m0.
+# Se asigna el valor de la condicion inicial al primer valor. → h(t=0) = h_0.
 h_EulerFor[0] = h_0
 h_EulerBack[0] = h_0
 h_EulerMod[0] = h_0
@@ -239,28 +251,196 @@ h_RK2[0] = h_0
 h_RK4[0] = h_0
 
 
+#=============================================    FUNCIONES AUXILIARES   ===============================================
+
+# EULER HACIA ATRÁS (BACKWARD)
+# y_i = y_(i-1) + h * F(y_i)    →   0 = y_(i-1) + h * F(y_i) - y_i
+
+def FAux_EulerBack(Aux, I, Vm, n, m, h, phi_val, h_res):
+    return [Vm + h_res * dV_dt(I, Aux[0], Aux[1], Aux[2], Aux[3]) - Aux[0],
+            n + h_res * dn_dt(phi_val, Aux[0], Aux[1]) - Aux[1],
+            m + h_res * dm_dt(phi_val, Aux[0], Aux[2]) - Aux[2],
+            h + h_res * dh_dt(phi_val, Aux[0], Aux[3]) - Aux[3]]
+
+
+# EULER MODIFICADO (MOD)
+# y_i = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)]    →   0 = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)] - y_i
+
+def FAux_EulerMod(Aux, I, Vm, n, m, h, phi_val, h_res):
+    return [Vm + (h_res / 2.0) * (dV_dt(I, Vm, n, m, h) + dV_dt(I, Aux[0], Aux[1], Aux[2], Aux[3])) - Aux[0],
+            n + (h_res / 2.0)  * (dn_dt(phi_val, Vm, n) + dn_dt(phi_val, Aux[0], Aux[1])) - Aux[1],
+            m + (h_res / 2.0)  * (dm_dt(phi_val, Vm, m) + dm_dt(phi_val, Aux[0], Aux[2])) - Aux[2],
+            h + (h_res / 2.0)  * (dh_dt(phi_val, Vm, h) + dh_dt(phi_val, Aux[0], Aux[3])) - Aux[3]]
+
+
 
 #================================================  SOLUCIÓN DEL MODELO =================================================
 
 # Se crea un procedimiento iterativo que recorre por completo el arreglo de tiempo desde
 # la segunda posición hasta la última.
-for iter in range(1,len(t)):
 
-    # EULER FORWARD
-    Vm_EulerFor[iter] = Vm_EulerFor[iter-1] + h * dV_dt(I_array[iter],Vm_EulerFor[iter-1],n_EulerFor[iter-1],
-                                                        m_EulerFor[iter-1],h_EulerFor[iter-1])
-    n_EulerFor[iter] = n_EulerFor[iter-1]   + h * dn_dt(phi_val,Vm_EulerFor[iter-1],n_EulerFor[iter-1])
-    m_EulerFor[iter] = m_EulerFor[iter-1]   + h * dm_dt(phi_val,Vm_EulerFor[iter-1],m_EulerFor[iter-1])
-    h_EulerFor[iter] = h_EulerFor[iter-1]   + h * dh_dt(phi_val,Vm_EulerFor[iter-1],h_EulerFor[iter-1])
 
-    # EULER BACKWARD
+# I. EULER FORWARD
+# Las ecuaciones fueron formuladas siguiendo el formato y_(i) = y_(i-1)+h[F(y_(i-1))]
 
-    # EULER MOD
+for iter in range(1, len(t)):
 
-    # RUNGE-KUTTA 2 (RK2)
-    # TODO [Caro] Transcribir las ecuaciones que hice en papel.
+    Vm_EulerFor[iter] = Vm_EulerFor[iter - 1] + h_res * dV_dt(I_array[iter], Vm_EulerFor[iter - 1],
+                                                          n_EulerFor[iter - 1],
+                                                          m_EulerFor[iter - 1], h_EulerFor[iter - 1])
+    n_EulerFor[iter] = n_EulerFor[iter - 1] + h_res * dn_dt(phi_val, Vm_EulerFor[iter - 1], n_EulerFor[iter - 1])
+    m_EulerFor[iter] = m_EulerFor[iter - 1] + h_res * dm_dt(phi_val, Vm_EulerFor[iter - 1], m_EulerFor[iter - 1])
+    h_EulerFor[iter] = h_EulerFor[iter - 1] + h_res * dh_dt(phi_val, Vm_EulerFor[iter - 1], h_EulerFor[iter - 1])
 
-    # RUNGE-KUTTA 4 (RK4)
+
+# II. EULER BACKWARD
+
+for iter in range(1, len(t)):
+    BackRoots = opt.fsolve(FAux_EulerBack, np.array([Vm_EulerBack[iter - 1],
+                                                     n_EulerBack[iter - 1],
+                                                     m_EulerBack[iter - 1],
+                                                     h_EulerBack[iter - 1]]),
+                           (I_array[iter], Vm_EulerBack[iter - 1], n_EulerBack[iter - 1], m_EulerBack[iter - 1],
+                            h_EulerBack[iter - 1], phi_val, h_res))
+
+    Vm_EulerBack[iter] = BackRoots[0]
+    n_EulerBack[iter] = BackRoots[1]
+    m_EulerBack[iter] = BackRoots[2]
+    h_EulerBack[iter] = BackRoots[3]
+
+
+# III. EULER MOD
+# Las ecuaciones fueron despejadas siguiendo el formato y_(i) = y_(i-1)+h/2*[F(y_(i-1))+F(y_(i))]
+
+for iter in range(1, len(t)):
+    ModRoots = opt.fsolve(FAux_EulerMod, np.array([Vm_EulerMod[iter - 1],
+                                                   n_EulerMod[iter - 1],
+                                                   m_EulerMod[iter - 1],
+                                                   h_EulerMod[iter - 1]]),
+                          (I_array[iter], Vm_EulerMod[iter - 1], n_EulerMod[iter - 1],
+                           m_EulerMod[iter - 1], h_EulerMod[iter - 1], phi_val, h_res))
+
+    Vm_EulerMod[iter] = ModRoots[0]
+    n_EulerMod[iter] = ModRoots[1]
+    m_EulerMod[iter] = ModRoots[2]
+    h_EulerMod[iter] = ModRoots[3]
+
+
+# IV. RUNGE-KUTTA 2 (RK2)
+#   * Ki1 = F(y_(i-1))                   * Ki2 = F(y_(i-1) + k1 * h_res)
+
+for iter in range(1, len(t)):
+
+    k11 = dV_dt(I_array[iter], Vm_RK2[iter-1], n_RK2[iter-1], m_RK2[iter-1], h_RK2[iter-1])
+    k21 = dn_dt(phi_val, Vm_RK2[iter-1], n_RK2[iter-1])
+    k31 = dm_dt(phi_val, Vm_RK2[iter-1], m_RK2[iter-1])
+    k41 = dh_dt(phi_val, Vm_RK2[iter-1], h_RK2[iter-1])
+
+    k12 = dV_dt(I_array[iter],
+                Vm_RK2[iter-1] + h_res * k11,
+                n_RK2[iter-1] + h_res * k21,
+                m_RK2[iter-1] + h_res * k31,
+                h_RK2[iter-1] + h_res * k41
+                )
+    k22 = dn_dt(phi_val, Vm_RK2[iter-1] + h_res * k11, n_RK2[iter-1] + h_res * k21)
+    k32 = dm_dt(phi_val, Vm_RK2[iter-1] + h_res * k11, m_RK2[iter-1] + h_res * k31)
+    k42 = dh_dt(phi_val, Vm_RK2[iter-1] + h_res * k11, h_RK2[iter-1] + h_res * k41)
+
+    Vm_RK2[iter] = Vm_RK2[iter - 1] + (h_res / 2.0) * (k11 + k12)
+    n_RK2[iter] = n_RK2[iter - 1] + (h_res / 2.0) * (k21 + k22)
+    m_RK2[iter] = m_RK2[iter - 1] + (h_res / 2.0) * (k31 + k32)
+    h_RK2[iter] = h_RK2[iter - 1] + (h_res / 2.0) * (k41 + k42)
+
+
+# V. RUNGE-KUTTA 4 (RK4)
+
+#   * Ki1 = F(y_(i-1))
+#   * Ki2 = F(y_(i-1) + 0.5 * k1 * h_res)
+#   * Ki3 = F(y_(i-1) + 0.5 * k2 * h_res)
+#   * Ki4 = F(y_(i-1) + k3 * h_res)
+
+for iter in range(1, len(t)):
+    k11 = dV_dt(I_array[iter], Vm_RK4[iter - 1], n_RK4[iter - 1], m_RK4[iter - 1], h_RK4[iter - 1])
+    k21 = dn_dt(phi_val, Vm_RK4[iter - 1], n_RK4[iter - 1])
+    k31 = dm_dt(phi_val, Vm_RK4[iter - 1], m_RK4[iter - 1])
+    k41 = dh_dt(phi_val, Vm_RK4[iter - 1], h_RK4[iter - 1])
+
+    k12 = dV_dt(I_array[iter],
+                Vm_RK4[iter - 1] + 0.5 * h_res * k11,
+                n_RK4[iter - 1] + 0.5 * h_res * k21,
+                m_RK4[iter - 1] + 0.5 * h_res * k31,
+                h_RK4[iter - 1] + 0.5 * h_res * k41
+                )
+    k22 = dn_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k11, n_RK4[iter - 1] + 0.5 * h_res * k21)
+    k32 = dm_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k11, m_RK4[iter - 1] + 0.5 * h_res * k31)
+    k42 = dh_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k11, h_RK4[iter - 1] + 0.5 * h_res * k41)
+
+    k13 = dV_dt(I_array[iter],
+                Vm_RK4[iter - 1] + 0.5 * h_res * k12,
+                n_RK4[iter - 1] + 0.5 * h_res * k22,
+                m_RK4[iter - 1] + 0.5 * h_res * k32,
+                h_RK4[iter - 1] + 0.5 * h_res * k42
+                )
+    k23 = dn_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k12, n_RK4[iter - 1] + 0.5 * h_res * k22)
+    k33 = dm_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k12, m_RK4[iter - 1] + 0.5 * h_res * k32)
+    k43 = dh_dt(phi_val, Vm_RK4[iter - 1] + 0.5 * h_res * k12, h_RK4[iter - 1] + 0.5 * h_res * k42)
+
+    k14 = dV_dt(I_array[iter],
+                Vm_RK4[iter - 1] + h_res * k13,
+                n_RK4[iter - 1] + h_res * k23,
+                m_RK4[iter - 1] + h_res * k33,
+                h_RK4[iter - 1] + h_res * k43
+                )
+    k24 = dn_dt(phi_val, Vm_RK4[iter - 1] + h_res * k13, n_RK4[iter - 1] + h_res * k23)
+    k34 = dm_dt(phi_val, Vm_RK4[iter - 1] + h_res * k13, m_RK4[iter - 1] + h_res * k33)
+    k44 = dh_dt(phi_val, Vm_RK4[iter - 1] + h_res * k13, h_RK4[iter - 1] + h_res * k43)
+
+    Vm_RK4[iter] = Vm_RK4[iter - 1] + (h_res / 6.0) * (k11 + 2.0 * k12 + 2.0 * k13 + k14)
+    n_RK4[iter] = n_RK4[iter - 1] + (h_res / 6.0) * (k21 + 2.0 * k22 + 2.0 * k23 + k24)
+    m_RK4[iter] = m_RK4[iter - 1] + (h_res / 6.0) * (k31 + 2.0 * k32 + 2.0 * k33 + k34)
+    h_RK4[iter] = h_RK4[iter - 1] + (h_res / 6.0) * (k41 + 2.0 * k42 + 2.0 * k43 + k44)
+
+
+## 0. Se crea el canvas en el que se graficarán las curvas.
+# TODO supongo que habrá que lograr que esto se inicialice al abrir la interfaz.
 
 plt.figure()
-plt.plot(t,Vm_EulerFor)
+rcParams['font.family'] = 'serif'   # Define que las fuentes usadas en el gráfico son serifadas.
+
+plt.xlabel(r'$t\ \ [mS]$',fontsize='x-large')       # Título secundario del eje x
+plt.ylabel(r'$V_m\ [mV]$ ',fontsize='large')        # Título secundario del eje y
+plt.style.use('bmh')
+
+plt.title('Potencial de acción de una neurona', fontsize='x-large')
+plt.tight_layout(pad=2.0)
+
+
+# I. Gráfico de curva de Euler hacia adelante (Forward)
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+
+plt.plot(t,Vm_EulerFor,color='red')
+
+# II. Gráfico de curva de Euler hacia atrás (Backward)
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+
+plt.plot(t,Vm_EulerBack,color='#fbb901')
+
+# III. Gráfico de curva de Euler Modificado (Backward)
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+plt.plot(t,Vm_EulerMod,'darkgreen')
+
+# IV. Gráfico de curva de Runge-Kutta 2.
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+
+plt.plot(t,Vm_RK2,'blue')
+
+# V. Gráfico de curva de Runge-Kutta 2.
+# TODO conectar al boton de interfaz
+# TODO Colocar códigos de color a los botones de interfaz
+plt.plot(t,Vm_RK4,'purple')
+
+plt.legend(["For","Back","Mod","RK2","RK4"]) # Eliminar línea después de probar que funciona.

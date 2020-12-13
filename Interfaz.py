@@ -97,8 +97,8 @@ class Interfaz:
         self.tiempo2 = StringVar()
         self.tiempo3 = StringVar()
         self.tiempo4 = StringVar()
-        self.intencidad1 = StringVar()
-        self.intencidad2 = StringVar()
+        self.intensidad1 = StringVar()
+        self.intensidad2 = StringVar()
         # ================================ Contenido ==================================
 
         # contenido de corriente
@@ -161,6 +161,7 @@ class Interfaz:
         self.intencidad2_in = Entry(master=self.frameCorriente, textvariable=self.intencidad2, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
         self.intencidad2_in.place(x=470,y=90)
 
+
         self.ma_decor1 =  Label(self.frameCorriente,width=2, text='mA', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2) 
         self.ma_decor1.place(x=540,y=90)
 
@@ -173,8 +174,10 @@ class Interfaz:
         self.intencidad2_in.configure(state="disabled", disabledbackground=self.color_3)
         
 
+
         # contenido de metodos de solucion, los nombres de las variables son lo suficientemente dicientes para saber que es cada cosa.
         self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solucion', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2) 
+
         self.metodos_lbl.place(x=35,y=10)
 
         self.eulerfw_btn = Button(master=self.frameMetodos, text="Euler Adelante",  command = self.placeHolderFn, bg=self.color_3, fg = self.color_blanco,  width=20,height=1, font=self.fuente_ppal,border="0")
@@ -195,17 +198,22 @@ class Interfaz:
         # contenido de parametros
         # titulo
         self.metodos_lbl =  Label(self.frameParametros, text='Parametros', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2) 
+
         self.metodos_lbl.place(x=75,y=10)
-        # parametros
+        # Parámetros
         # 1
+
         self.Vm0_lbl =  Label(self.frameParametros,width=5, text='Vm_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+        
         self.Vm0_lbl.place(x=30,y=60)
 
         self.Vm0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=self.fuente_sec)
         self.Vm0_in.place(x=120,y=60)
         
         # 2
+
         self.n0_lbl =  Label(self.frameParametros,width=5, text='n_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+
         self.n0_lbl.place(x=30,y=100)
 
         self.n0_in = Entry(master=self.frameParametros, textvariable=self.n0, width=10, font=self.fuente_sec)
@@ -213,20 +221,25 @@ class Interfaz:
 
         #3
         self.m0_lbl =  Label(self.frameParametros,width=5, text='m_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+
         self.m0_lbl.place(x=30,y=140)
 
         self.m0_in = Entry(master=self.frameParametros, textvariable=self.m0, width=10, font=self.fuente_sec)
         self.m0_in.place(x=120,y=140)
 
+
         #4
         self.h0_lbl =  Label(self.frameParametros,width=5, text='h_0:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+
         self.h0_lbl.place(x=30,y=180)
 
         self.h0_in = Entry(master=self.frameParametros, textvariable=self.h0, width=10, font=self.fuente_sec)
         self.h0_in.place(x=120,y=180)
 
+
         #5
         self.T_lbl =  Label(self.frameParametros,width=5, text='T:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
+
         self.T_lbl.place(x=30,y=220)
 
         self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=10, font=self.fuente_sec)
@@ -275,7 +288,7 @@ class Interfaz:
         '''
         MsgBox =  messagebox.askquestion ('Cerrar Aplicación','¿Está seguro que desea cerrar la aplicación?', icon = 'warning')
         if MsgBox == 'yes':
-            self.ventana.quit()
+            self.ventana.quit()     #FIXME Botón de cierre no funciona.
         else:
             messagebox.showinfo('Retornar','Será retornado a la aplicación')
     
