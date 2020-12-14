@@ -10,8 +10,12 @@ from tkinter import filedialog      # elegir archivos
 from tkinter import messagebox      # mensaje de cerrar
 from PIL import ImageTk ,Image      # insersion de imagenes
 import tkinter.font as font         # mas fuentes
+import struct as st
+from pathlib import Path
+from time import time
 from Logica import *                # importo todos los metodos implementados en la logica
 # parametros iniciales de matplotlib
+
 matplotlib.use("TkAgg")
 
 
@@ -25,6 +29,7 @@ class Interfaz:
         self.ventana.title('Potencial de accion de la neurona')
         self.fuente_ppal = font.Font(family='math')
         self.fuente_sec = ('math', 15, 'bold italic')
+        self.directorioActual = Path(__file__).parent
         self.color_1 = '#2b2c2f'
         self.color_2 = '#615d62'
         self.color_3 = '#414044'
@@ -32,12 +37,22 @@ class Interfaz:
         self.color_blanco = '#fff'
         self.color_negro = '#000'
 
+        # =================== Lista de ejecuciones de cada algoritmo para guardar ==========================
+        # guardo tuplas de los listados de x y y de la ejecucion de cada algoritmo mientras no se limpie la grafica
+        self.eForSet = []
+        self.eBackSet = []
+        self.eModSet = []
+        self.RK2Set = []
+        self.RK4Set = []
+        self.scipySet = []
+        
+
         # -------- toolbar ------------
         self.frameHerramientas = Frame(self.ventana, bd=5 , bg=self.color_1)
         # genero los objetos imagen para la toolbox
-        abrir_img = Image.open('Open.png')
-        guardar_img = Image.open('Save.png')
-        cerrar_img = Image.open('Close.png')
+        abrir_img = Image.open(self.directorioActual.joinpath('Open.png').absolute())
+        guardar_img = Image.open(self.directorioActual.joinpath('Save.png').absolute())
+        cerrar_img = Image.open(self.directorioActual.joinpath('Close.png').absolute())
         abrir_icon = ImageTk.PhotoImage(abrir_img)
         guardar_icon = ImageTk.PhotoImage(guardar_img)
         cerrar_icon = ImageTk.PhotoImage(cerrar_img)
@@ -300,6 +315,7 @@ class Interfaz:
     def llamadoEulerFor(self):
         parametros = self.actualizarParametros()
         t_eFor,V_eFor = EulerFor(*parametros)
+        self.eForSet.append((t_eFor,V_eFor))
         self.plot.plot(t_eFor, V_eFor)
         self.imagenGrafica.draw()
 
@@ -307,6 +323,7 @@ class Interfaz:
     def llamadoEulerBack(self):
         parametros = self.actualizarParametros()
         t_eBack,V_eBack = EulerBack(*parametros)
+        self.eBackSet.append((t_eBack,V_eBack))
         self.plot.plot(t_eBack,V_eBack)
         self.imagenGrafica.draw()
 
@@ -314,6 +331,7 @@ class Interfaz:
     def llamadoEulerMod(self):
         parametros = self.actualizarParametros()
         t_eMod,V_eMod = EulerMod(*parametros)
+        self.eModSet.append((t_eMod,V_eMod))
         self.plot.plot(t_eMod, V_eMod)
         self.imagenGrafica.draw()
 
@@ -321,6 +339,7 @@ class Interfaz:
     def llamadoRK2(self):
         parametros = self.actualizarParametros()
         t_RK2,V_RK2 = RK2(*parametros)
+        self.RK2Set.append((t_RK2,V_RK2))
         self.plot.plot(t_RK2, V_RK2)
         self.imagenGrafica.draw()
     
@@ -328,12 +347,14 @@ class Interfaz:
     def llamadoRK4(self):
         parametros = self.actualizarParametros()
         t_RK4,V_RK4 = RK4(*parametros)
+        self.RK4Set.append((t_RK4,V_RK4))
         self.plot.plot(t_RK4, V_RK4)
         self.imagenGrafica.draw()
     
     def llamadoScipy(self):
         parametros = self.actualizarParametros()
         t_SCIPY,V_SCIPY = SCIPY(*parametros)
+        self.scipySet.append((t_SCIPY,V_SCIPY))
         self.plot.plot(t_SCIPY, V_SCIPY)
         self.imagenGrafica.draw()
 
@@ -366,10 +387,70 @@ class Interfaz:
     def guardarDatos(self):
         ''' Funcion que abre un dialogo para ingresar el nombre de un archivo para guardar el resultado de una ejecucion de algoritmo en formato double
         '''
-        file_name = filedialog.asksaveasfilename()
+        ahora = time()
+        directorioNombre = filedialog.askdirectory(title="Directorio de datos generados")
+        if directorioNombre == '':
+            return
+        directorioDatos = Path(directorioNombre)
+        carpetaDatos = directorioDatos.joinpath(str(ahora))
         try:
-            with open(file_name,'wb') as f:
-                pass
+
+            carpetaDatos.mkdir(parents=True, exist_ok=True)
+
+            for i,val in enumerate(self.eForSet):
+                x_data = val[0]
+                y_data = val[1]
+                x_packed = st.pack('d'*len(x_data),*x_data)
+                y_packed = st.pack('d'*len(y_data),*y_data)
+                with open(carpetaDatos.joinpath(str(i)+'.efor').absolute(),'wb') as f_efor:
+                    f_efor.write(x_packed)
+                    f_efor.write(y_packed)
+
+            for i,val in enumerate(self.eBackSet):
+                x_data = val[0]
+                y_data = val[1]
+                x_packed = st.pack('d'*len(x_data),*x_data)
+                y_packed = st.pack('d'*len(y_data),*y_data)
+                with open(carpetaDatos.joinpath(str(i)+'.eback').absolute(),'wb') as f_efor:
+                    f_efor.write(x_packed)
+                    f_efor.write(y_packed)
+
+            for i,val in enumerate(self.eModSet):
+                x_data = val[0]
+                y_data = val[1]
+                x_packed = st.pack('d'*len(x_data),*x_data)
+                y_packed = st.pack('d'*len(y_data),*y_data)
+                with open(carpetaDatos.joinpath(str(i)+'.emod').absolute(),'wb') as f_efor:
+                    f_efor.write(x_packed)
+                    f_efor.write(y_packed)
+
+            for i,val in enumerate(self.RK2Set):
+                x_data = val[0]
+                y_data = val[1]
+                x_packed = st.pack('d'*len(x_data),*x_data)
+                y_packed = st.pack('d'*len(y_data),*y_data)
+                with open(carpetaDatos.joinpath(str(i)+'.rk2').absolute(),'wb') as f_efor:
+                    f_efor.write(x_packed)
+                    f_efor.write(y_packed)
+
+            for i,val in enumerate(self.RK4Set):
+                x_data = val[0]
+                y_data = val[1]
+                x_packed = st.pack('d'*len(x_data),*x_data)
+                y_packed = st.pack('d'*len(y_data),*y_data)
+                with open(carpetaDatos.joinpath(str(i)+'.rk4').absolute(),'wb') as f_efor:
+                    f_efor.write(x_packed)
+                    f_efor.write(y_packed)
+
+            for i,val in enumerate(self.scipySet):
+                x_data = val[0]
+                y_data = val[1]
+                x_packed = st.pack('d'*len(x_data),*x_data)
+                y_packed = st.pack('d'*len(y_data),*y_data)
+                with open(carpetaDatos.joinpath(str(i)+'.scipy').absolute(),'wb') as f_efor:
+                    f_efor.write(x_packed)
+                    f_efor.write(y_packed)
+            
         except:
             pass
         
@@ -377,10 +458,94 @@ class Interfaz:
     def cargarDatos(self):
         ''' Funcion que abre un dialogo para seleccionar un archivo del cual se cargaran los datos de una ejecucion previa en formato double
         '''
-        file_name = filedialog.askopenfilename()
+        directorioNombre = filedialog.askdirectory(title="Directorio de datos generados")
+        if directorioNombre == '':
+            return
+        directorioDatos = Path(directorioNombre)
         try:
-            with open(file_name,'rb') as f:
-                pass
+            filesEfor = [f.absolute() for f in directorioDatos.glob('*.efor') if f.is_file()]
+            filesEback = [f.absolute() for f in directorioDatos.glob('*.eback') if f.is_file()]
+            filesEmod = [f.absolute() for f in directorioDatos.glob('*.emod') if f.is_file()]
+            filesRK2 = [f.absolute() for f in directorioDatos.glob('*.rk2') if f.is_file()]
+            filesRK4 = [f.absolute() for f in directorioDatos.glob('*.rk4') if f.is_file()]
+            filesScipy = [f.absolute() for f in directorioDatos.glob('*.scipy') if f.is_file()]
+            
+            tmpSetEfor = []
+            tmpSetEback = []
+            tmpSetEmod = []
+            tmpSetRK2 = []
+            tmpSetRK4 = []
+            tmpSetScipy = []
+
+            for fileEfor in filesEfor:
+                with open(fileEfor,'rb') as f:
+                    data = f.read()
+                    unpacked = list(st.unpack('d'*(len(data)//8),data))
+                    tam = len(unpacked)//2
+                    t_eFor = np.array(unpacked[:tam])
+                    V_eFor = np.array(unpacked[tam:])
+                    self.plot.plot(t_eFor,V_eFor)
+                    tmpSetEfor.append((t_eFor,V_eFor))
+            
+            
+            for fileEback in filesEback:
+                with open(fileEback,'rb') as f:
+                    data = f.read()
+                    unpacked = list(st.unpack('d'*(len(data)//8),data))
+                    tam = len(unpacked)//2
+                    t_eBack = np.array(unpacked[:tam])
+                    V_eBack = np.array(unpacked[tam:])
+                    self.plot.plot(t_eBack,V_eBack)
+                    tmpSetEback.append((t_eBack,V_eBack))
+            
+            for fileEmod in filesEmod:
+                with open(fileEmod,'rb') as f:
+                    data = f.read()
+                    unpacked = list(st.unpack('d'*(len(data)//8),data))
+                    tam = len(unpacked)//2
+                    t_eMod = np.array(unpacked[:tam])
+                    V_eMod = np.array(unpacked[tam:])
+                    self.plot.plot(t_eMod,V_eMod)
+                    tmpSetEmod.append((t_eMod,V_eMod))
+            
+            for fileRK2 in filesRK2:
+                with open(fileRK2,'rb') as f:
+                    data = f.read()
+                    unpacked = list(st.unpack('d'*(len(data)//8),data))
+                    tam = len(unpacked)//2
+                    t_RK2 = np.array(unpacked[:tam])
+                    V_RK2 = np.array(unpacked[tam:])
+                    self.plot.plot(t_RK2,V_RK2)
+                    tmpSetRK2.append((t_RK2,V_RK2))
+            
+            for fileRK4 in filesRK4:
+                with open(fileRK4,'rb') as f:
+                    data = f.read()
+                    unpacked = list(st.unpack('d'*(len(data)//8),data))
+                    tam = len(unpacked)//2
+                    t_RK4 = np.array(unpacked[:tam])
+                    V_RK4 = np.array(unpacked[tam:])
+                    self.plot.plot(t_RK4,V_RK4)
+                    tmpSetRK4.append((t_RK4,V_RK4))
+            
+            for fileScipy in filesScipy:
+                with open(fileScipy,'rb') as f:
+                    data = f.read()
+                    unpacked = list(st.unpack('d'*(len(data)//8),data))
+                    tam = len(unpacked)//2
+                    t_SCIPY = np.array(unpacked[:tam])
+                    V_SCIPY = np.array(unpacked[tam:])
+                    self.plot.plot(t_SCIPY,V_SCIPY)
+                    tmpSetScipy.append((t_SCIPY,V_SCIPY))
+            
+            self.eForSet+=tmpSetEfor
+            self.eBackSet+=tmpSetEback
+            self.eModSet+=tmpSetEmod
+            self.RK2Set+=tmpSetRK2
+            self.RK4Set+=tmpSetRK4
+            self.scipySet+=tmpSetScipy
+            self.imagenGrafica.draw()
+
         except:
             pass
 
