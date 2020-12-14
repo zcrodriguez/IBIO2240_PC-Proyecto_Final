@@ -296,6 +296,12 @@ class Interfaz:
     
     def limpiarGrafica(self):
         self.plot.cla()
+        grafFont = FontProperties()
+        grafFont.set_family('serif')   # Define que las fuentes usadas en el gráfico son serifadas.
+        self.plot.set_xlabel(r'$t\ \ [mS]$',fontsize='x-large', fontproperties=grafFont)       # Título secundario del eje x
+        self.plot.set_ylabel(r'$V_m\ [mV]$ ',fontsize='large', fontproperties=grafFont)        # Título secundario del eje y
+            
+        self.plot.set_title('Potencial de acción de una neurona', fontsize='x-large', fontproperties=grafFont)
         self.imagenGrafica.draw()
         self.eForSet = []
         self.eBackSet = []
