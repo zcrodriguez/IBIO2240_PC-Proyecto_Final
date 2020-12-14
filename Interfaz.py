@@ -117,6 +117,9 @@ class Interfaz:
         self.herramientasGrafica = NavigationToolbar2Tk(self.imagenGrafica, self.frameGrafica, pack_toolbar=False)
         self.herramientasGrafica.update()
         self.herramientasGrafica.place(x=0, y=400)
+
+        self.limpiar_btn = Button(master=self.frameGrafica, text="limpiar",  command = self.limpiarGrafica, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
+        self.limpiar_btn.place(x=350,y=410)
     	# ================================ Variables para las formulas ================================
         self.opcion =  IntVar()
         self.Vm_0 = StringVar()
@@ -291,6 +294,15 @@ class Interfaz:
         self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=10, font=self.fuente_sec)
         self.T_in.place(x=120,y=220)
     
+    def limpiarGrafica(self):
+        self.plot.cla()
+        self.imagenGrafica.draw()
+        self.eForSet = []
+        self.eBackSet = []
+        self.eModSet = []
+        self.RK2Set = []
+        self.RK4Set = []
+        self.scipySet = []
 
     def actualizarParametros(self):
         pVm0 = float(self.Vm_0.get())
