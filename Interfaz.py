@@ -282,7 +282,7 @@ class Interfaz:
 
         # ------------------------------------------------- contenido de parametros -----------------------------------------------
         # titulo del apartadode parametros
-        self.metodos_lbl =  Label(self.frameParametros, text='Parámetros', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2)
+        self.metodos_lbl =  Label(self.frameParametros, text='Parámetros', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
 
         self.metodos_lbl.place(x=75,y=10)
         # Parámetros
@@ -291,22 +291,25 @@ class Interfaz:
         self.Vm0_lbl =  Label(self.frameParametros,width=5, text='V'+u"\u2098\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
         self.Vm0_lbl.place(x=30,y=60)
 
-        self.Vm0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=self.fuente_sec)
+        self.Vm0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=8, font=self.fuente_sec)
         self.Vm0_in.place(x=120,y=60)
+
+        self.Vm0_lbl_units =  Label(self.frameParametros,width=3, text='mV', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2)
+        self.Vm0_lbl_units.place(x=220,y=60)
         
         # etiqueta para el parametro n_0 y su respectiva entrada para cambiar el parametro
 
         self.n0_lbl =  Label(self.frameParametros,width=5, text='n'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
         self.n0_lbl.place(x=30,y=100)
 
-        self.n0_in = Entry(master=self.frameParametros, textvariable=self.n0, width=10, font=self.fuente_sec)
+        self.n0_in = Entry(master=self.frameParametros, textvariable=self.n0, width=8, font=self.fuente_sec)
         self.n0_in.place(x=120,y=100)
 
         # etiqueta para el parametro m_0 y su respectiva entrada para cambiar el parametro
         self.m0_lbl =  Label(self.frameParametros,width=5, text='m'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
         self.m0_lbl.place(x=30,y=140)
 
-        self.m0_in = Entry(master=self.frameParametros, textvariable=self.m0, width=10, font=self.fuente_sec)
+        self.m0_in = Entry(master=self.frameParametros, textvariable=self.m0, width=8, font=self.fuente_sec)
         self.m0_in.place(x=120,y=140)
 
 
@@ -314,7 +317,7 @@ class Interfaz:
         self.h0_lbl =  Label(self.frameParametros,width=5, text='h'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
         self.h0_lbl.place(x=30,y=180)
 
-        self.h0_in = Entry(master=self.frameParametros, textvariable=self.h0, width=10, font=self.fuente_sec)
+        self.h0_in = Entry(master=self.frameParametros, textvariable=self.h0, width=8, font=self.fuente_sec)
         self.h0_in.place(x=120,y=180)
 
 
@@ -322,8 +325,11 @@ class Interfaz:
         self.T_lbl =  Label(self.frameParametros,width=5, text='T:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
         self.T_lbl.place(x=30,y=220)
 
-        self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=10, font=self.fuente_sec)
+        self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=8, font=self.fuente_sec)
         self.T_in.place(x=120,y=220)
+
+        self.T_lbl_units =  Label(self.frameParametros,width=3, text=u"\N{DEGREE SIGN}C", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2)
+        self.T_lbl_units.place(x=220,y=220)
     
     def limpiarGrafica(self):
         ''' Funcion que limpia las grafica y las listas donde se guardan los datos para los metodos de persistencia
