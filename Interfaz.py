@@ -233,7 +233,7 @@ class Interfaz:
 
         # ----------------------------------------------contenido de metodos de solucion ------------------------------------
         # titulo del apartado de metodos de solcion
-        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solución', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2)
+        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solución', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
 
         self.metodos_lbl.place(x=35,y=10)
 
