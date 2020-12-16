@@ -6,9 +6,11 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.font_manager import FontProperties    # Esto es para modificar el estilo de fuente de los gráficos.
 import matplotlib
 from tkinter import *               # wild card import para evitar llamar tk cada vez
+
 from tkinter import filedialog      # elegir archivos
 from tkinter import messagebox      # mensaje de cerrar
 from PIL import ImageTk ,Image      # insersion de imagenes
+import datetime as dt               # fecha para que la carpeta de datos tenga un nombre bonito
 import tkinter.font as font         # mas fuentes
 import struct as st
 from pathlib import Path
@@ -30,13 +32,19 @@ class Interfaz:
         self.fuente_ppal = font.Font(family='math')
         self.fuente_sec = ('math', 15, 'bold italic')
         self.directorioActual = Path(__file__).parent
+        # Colores
         self.color_1 = '#2b2c2f'
         self.color_2 = '#615d62'
         self.color_3 = '#414044'
         self.color_4 = '#8e858b'
         self.color_blanco = '#fff'
         self.color_negro = '#000'
-
+        self.color_efor = 'red'
+        self.color_eback = '#fbb901'
+        self.color_emod = 'darkgreen'
+        self.color_rk2 = 'blue'
+        self.color_rk4 = 'purple'
+        self.color_scipy = 'black'
         # =================== Lista de ejecuciones de cada algoritmo para guardar ==========================
         # guardo tuplas de los listados de x y y de la ejecucion de cada algoritmo mientras no se limpie la grafica
         self.eForSet = []
@@ -226,20 +234,45 @@ class Interfaz:
 
         self.metodos_lbl.place(x=35,y=10)
 
+        # boton para el metodo euler for y su respectivo color
+        self.metodos_decor1 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_efor) 
+        self.metodos_decor1.place(x=20,y=61)
+
         self.eulerfw_btn = Button(master=self.frameMetodos, text="Euler Adelante",  command = self.llamadoEulerFor, bg=self.color_3, fg = self.color_blanco,  width=20,height=1, font=self.fuente_ppal,border="0")
         self.eulerfw_btn.place(x=45,y=60)
+
+        # boton para el metodo euler back y su respectivo color
+
+        self.metodos_decor2 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_eback) 
+        self.metodos_decor2.place(x=20,y=101)
 
         self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atrás",  command = self.llamadoEulerBack, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulerbk_btn.place(x=45,y=100)
 
+        # boton para el metodo euler modificado y su respectivo color
+        self.metodos_decor3 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_emod) 
+        self.metodos_decor3.place(x=20,y=141)
+
         self.eulermod_btn = Button(master=self.frameMetodos, text="Euler Mod",  command = self.llamadoEulerMod, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulermod_btn.place(x=45,y=140)
+
+        # boton para el metodo rk2 y su respectivo color
+        self.metodos_decor4 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_rk2) 
+        self.metodos_decor4.place(x=20,y=181)
 
         self.rk2_btn = Button(master=self.frameMetodos, text="Runge-Kutta 2",  command = self.llamadoRK2, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk2_btn.place(x=45,y=180)
 
+        # boton para el metodo rk4 y su respectivo color
+        self.metodos_decor5 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_rk4) 
+        self.metodos_decor5.place(x=20,y=221)
+
         self.rk4_btn = Button(master=self.frameMetodos, text="Runge-Kutta 4",  command = self.llamadoRK4, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk4_btn.place(x=45,y=220)
+
+        # boton para el metodo scipy y su respectivo color
+        self.metodos_decor6 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_scipy) 
+        self.metodos_decor6.place(x=20,y=261)
 
         self.scipy_btn = Button(master=self.frameMetodos, text="Scipy",  command = self.llamadoScipy, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.scipy_btn.place(x=45,y=260)
@@ -334,7 +367,7 @@ class Interfaz:
         parametros = self.actualizarParametros()
         t_eFor,V_eFor = EulerFor(*parametros)
         self.eForSet.append((t_eFor,V_eFor))
-        self.plot.plot(t_eFor, V_eFor)
+        self.plot.plot(t_eFor, V_eFor,color=self.color_efor)
         self.imagenGrafica.draw()
 
 
@@ -342,7 +375,7 @@ class Interfaz:
         parametros = self.actualizarParametros()
         t_eBack,V_eBack = EulerBack(*parametros)
         self.eBackSet.append((t_eBack,V_eBack))
-        self.plot.plot(t_eBack,V_eBack)
+        self.plot.plot(t_eBack,V_eBack,color=self.color_eback)
         self.imagenGrafica.draw()
 
 
@@ -350,7 +383,7 @@ class Interfaz:
         parametros = self.actualizarParametros()
         t_eMod,V_eMod = EulerMod(*parametros)
         self.eModSet.append((t_eMod,V_eMod))
-        self.plot.plot(t_eMod, V_eMod)
+        self.plot.plot(t_eMod, V_eMod, color=self.color_emod)
         self.imagenGrafica.draw()
 
 
@@ -358,7 +391,7 @@ class Interfaz:
         parametros = self.actualizarParametros()
         t_RK2,V_RK2 = RK2(*parametros)
         self.RK2Set.append((t_RK2,V_RK2))
-        self.plot.plot(t_RK2, V_RK2)
+        self.plot.plot(t_RK2, V_RK2, color=self.color_rk2)
         self.imagenGrafica.draw()
     
 
@@ -366,14 +399,14 @@ class Interfaz:
         parametros = self.actualizarParametros()
         t_RK4,V_RK4 = RK4(*parametros)
         self.RK4Set.append((t_RK4,V_RK4))
-        self.plot.plot(t_RK4, V_RK4)
+        self.plot.plot(t_RK4, V_RK4, color=self.color_rk4)
         self.imagenGrafica.draw()
     
     def llamadoScipy(self):
         parametros = self.actualizarParametros()
         t_SCIPY,V_SCIPY = SCIPY(*parametros)
         self.scipySet.append((t_SCIPY,V_SCIPY))
-        self.plot.plot(t_SCIPY, V_SCIPY)
+        self.plot.plot(t_SCIPY, V_SCIPY, color=self.color_scipy)
         self.imagenGrafica.draw()
 
 
@@ -396,7 +429,7 @@ class Interfaz:
         '''
         MsgBox =  messagebox.askquestion ('Cerrar Aplicación','¿Está seguro que desea cerrar la aplicación?', icon = 'warning')
         if MsgBox == 'yes':
-            self.ventana.destroy()     #FIXME Botón de cierre no funciona.
+            self.ventana.destroy()     
             self.ventana.quit()
         else:
             messagebox.showinfo('Retornar','Será retornado a la aplicación')
@@ -406,11 +439,13 @@ class Interfaz:
         ''' Funcion que abre un dialogo para ingresar el nombre de un archivo para guardar el resultado de una ejecucion de algoritmo en formato double
         '''
         ahora = time()
-        directorioNombre = filedialog.askdirectory(title="Directorio de datos generados")
+        fecha = dt.datetime.utcfromtimestamp(ahora).strftime("%Y-%m-%d_%H-%M-%S")
+        nombreCarpetaDatos = 'Datos_' + fecha
+        directorioNombre = filedialog.askdirectory(parent = self.ventana,initialdir=self.directorioActual,title="Directorio de guardado de datos")
         if directorioNombre == '':
             return
         directorioDatos = Path(directorioNombre)
-        carpetaDatos = directorioDatos.joinpath(str(ahora))
+        carpetaDatos = directorioDatos.joinpath(str(nombreCarpetaDatos))
         try:
 
             carpetaDatos.mkdir(parents=True, exist_ok=True)
@@ -476,7 +511,7 @@ class Interfaz:
     def cargarDatos(self):
         ''' Funcion que abre un dialogo para seleccionar un archivo del cual se cargaran los datos de una ejecucion previa en formato double
         '''
-        directorioNombre = filedialog.askdirectory(title="Directorio de datos generados")
+        directorioNombre = filedialog.askdirectory(parent = self.ventana,initialdir=self.directorioActual,title="Directorio de datos generados")
         if directorioNombre == '':
             return
         directorioDatos = Path(directorioNombre)
@@ -502,7 +537,7 @@ class Interfaz:
                     tam = len(unpacked)//2
                     t_eFor = np.array(unpacked[:tam])
                     V_eFor = np.array(unpacked[tam:])
-                    self.plot.plot(t_eFor,V_eFor)
+                    self.plot.plot(t_eFor,V_eFor,color=self.color_efor)
                     tmpSetEfor.append((t_eFor,V_eFor))
             
             
@@ -513,7 +548,7 @@ class Interfaz:
                     tam = len(unpacked)//2
                     t_eBack = np.array(unpacked[:tam])
                     V_eBack = np.array(unpacked[tam:])
-                    self.plot.plot(t_eBack,V_eBack)
+                    self.plot.plot(t_eBack,V_eBack, color=self.color_eback)
                     tmpSetEback.append((t_eBack,V_eBack))
             
             for fileEmod in filesEmod:
@@ -523,7 +558,7 @@ class Interfaz:
                     tam = len(unpacked)//2
                     t_eMod = np.array(unpacked[:tam])
                     V_eMod = np.array(unpacked[tam:])
-                    self.plot.plot(t_eMod,V_eMod)
+                    self.plot.plot(t_eMod,V_eMod, color=self.color_emod)
                     tmpSetEmod.append((t_eMod,V_eMod))
             
             for fileRK2 in filesRK2:
@@ -533,7 +568,7 @@ class Interfaz:
                     tam = len(unpacked)//2
                     t_RK2 = np.array(unpacked[:tam])
                     V_RK2 = np.array(unpacked[tam:])
-                    self.plot.plot(t_RK2,V_RK2)
+                    self.plot.plot(t_RK2,V_RK2,color=self.color_rk2)
                     tmpSetRK2.append((t_RK2,V_RK2))
             
             for fileRK4 in filesRK4:
@@ -543,7 +578,7 @@ class Interfaz:
                     tam = len(unpacked)//2
                     t_RK4 = np.array(unpacked[:tam])
                     V_RK4 = np.array(unpacked[tam:])
-                    self.plot.plot(t_RK4,V_RK4)
+                    self.plot.plot(t_RK4,V_RK4, color=self.color_rk4)
                     tmpSetRK4.append((t_RK4,V_RK4))
             
             for fileScipy in filesScipy:
@@ -553,7 +588,7 @@ class Interfaz:
                     tam = len(unpacked)//2
                     t_SCIPY = np.array(unpacked[:tam])
                     V_SCIPY = np.array(unpacked[tam:])
-                    self.plot.plot(t_SCIPY,V_SCIPY)
+                    self.plot.plot(t_SCIPY,V_SCIPY, color=self.color_scipy)
                     tmpSetScipy.append((t_SCIPY,V_SCIPY))
             
             self.eForSet+=tmpSetEfor
