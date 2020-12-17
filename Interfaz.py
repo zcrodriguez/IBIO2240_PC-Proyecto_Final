@@ -6,9 +6,11 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.font_manager import FontProperties    # Esto es para modificar el estilo de fuente de los gráficos.
 import matplotlib
 from tkinter import *               # wild card import para evitar llamar tk cada vez
+
 from tkinter import filedialog      # elegir archivos
 from tkinter import messagebox      # mensaje de cerrar
 from PIL import ImageTk ,Image      # insersion de imagenes
+import datetime as dt               # fecha para que la carpeta de datos tenga un nombre bonito
 import tkinter.font as font         # mas fuentes
 import struct as st
 from pathlib import Path
@@ -30,13 +32,19 @@ class Interfaz:
         self.fuente_ppal = font.Font(family='math')
         self.fuente_sec = ('math', 15, 'bold italic')
         self.directorioActual = Path(__file__).parent
+        # Colores
         self.color_1 = '#2b2c2f'
         self.color_2 = '#615d62'
         self.color_3 = '#414044'
         self.color_4 = '#8e858b'
         self.color_blanco = '#fff'
         self.color_negro = '#000'
-
+        self.color_efor = 'red'
+        self.color_eback = '#fbb901'
+        self.color_emod = 'darkgreen'
+        self.color_rk2 = 'blue'
+        self.color_rk4 = 'purple'
+        self.color_scipy = 'black'
         # =================== Lista de ejecuciones de cada algoritmo para guardar ==========================
         # guardo tuplas de los listados de x y y de la ejecucion de cada algoritmo mientras no se limpie la grafica
         self.eForSet = []
@@ -47,7 +55,7 @@ class Interfaz:
         self.scipySet = []
         
 
-        # -------- toolbar ------------
+        # ================================================= toolbar =================================================
         self.frameHerramientas = Frame(self.ventana, bd=5 , bg=self.color_1)
         # genero los objetos imagen para la toolbox
         abrir_img = Image.open(self.directorioActual.joinpath('Open.png').absolute())
@@ -65,13 +73,13 @@ class Interfaz:
         self.abrir_btn.image = abrir_icon
         self.guardar_btn.image = guardar_icon
         self.cerrar_btn.image = cerrar_icon
-        # posiciono los botones y el frame
+        # posiciono los botones y el frame de herramientas
         self.abrir_btn.pack(side=LEFT, padx =2,pady=2)
         self.guardar_btn.pack(side=LEFT, padx =2,pady=2)
         self.cerrar_btn.pack(side=RIGHT, padx =2,pady=2)
         self.frameHerramientas.pack(side=TOP,fill=X)
 
-        # --------  frame de contenido y subframes ------------
+        # =================================================  frame de contenido y subframes =================================================
 
         self.frameContenido = Frame(self.ventana, bd=5 , bg=self.color_4)
         # hago que el frame ocupe todo el espacio sobrante ya que este sera sobre el que dibuje el resto de widgets
@@ -103,21 +111,22 @@ class Interfaz:
         self.frameParametros.place(x=0,y=305)
         # ================================ Grafica ===========================================
         plt.style.use('bmh')
-        self.fig = plt.Figure(figsize=(5.75, 4.0))
-        self.plot = self.fig.add_subplot(1,1,1)
+        self.fig = plt.Figure(figsize=(5.75, 4.0)) # figura principal
+        self.plot = self.fig.add_subplot(1,1,1) # plto principal donde se dibujara todos los datos
         grafFont = FontProperties()
         grafFont.set_family('serif')   # Define que las fuentes usadas en el gráfico son serifadas.
         self.plot.set_xlabel(r'$t\ \ [mS]$',fontsize='x-large', fontproperties=grafFont)       # Título secundario del eje x
         self.plot.set_ylabel(r'$V_m\ [mV]$ ',fontsize='large', fontproperties=grafFont)        # Título secundario del eje y
             
-        self.plot.set_title('Potencial de acción de una neurona', fontsize='x-large', fontproperties=grafFont)
+        self.plot.set_title('Potencial de acción de una neurona', fontsize='x-large', fontproperties=grafFont) # Titulo Principal
         self.fig.tight_layout()
-        self.imagenGrafica = FigureCanvasTkAgg(self.fig, master=self.frameGrafica)
-        self.imagenGrafica.get_tk_widget().place(x=0,y=0)
-        self.herramientasGrafica = NavigationToolbar2Tk(self.imagenGrafica, self.frameGrafica, pack_toolbar=False)
-        self.herramientasGrafica.update()
-        self.herramientasGrafica.place(x=0, y=400)
+        self.imagenGrafica = FigureCanvasTkAgg(self.fig, master=self.frameGrafica)  # canvas que dibujara la grafica en la interfaz
+        self.imagenGrafica.get_tk_widget().place(x=0,y=0)                           # le asigno su posicion
+        self.herramientasGrafica = NavigationToolbar2Tk(self.imagenGrafica, self.frameGrafica, pack_toolbar=False) # creo la barra de herramientas que manipularan la grafica
+        self.herramientasGrafica.update()                                                                           # lo añada a la interfaz
+        self.herramientasGrafica.place(x=0, y=400)                                                                  # le pongo su lugar
 
+        # boton que se encargara de limpiar las ejecuciones de algoritmos en la grafica
         self.limpiar_btn = Button(master=self.frameGrafica, text="limpiar",  command = self.limpiarGrafica, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.limpiar_btn.place(x=350,y=410)
     	# ================================ Variables para las formulas ================================
@@ -149,7 +158,7 @@ class Interfaz:
 
         # ================================ Contenido ==================================
 
-        # contenido de corriente
+        # -----------------------------contenido de corriente--------------------------
 
         # radio button de corriente constate el cual llama a la funcion que habilita las entradas de datos
         self.corriente_cte = Radiobutton(master=self.frameCorriente, command = self.estadoEntradaCorriente ,text='Corriente constante', value=1,  variable=self.opcion, bg=self.color_2,font=self.fuente_sec)
@@ -166,7 +175,7 @@ class Interfaz:
         self.titulo_tiempo =  Label(self.frameCorriente,width=10, text='Tiempo', font=('math', 12, 'bold italic'),fg = self.color_blanco, bg =self.color_2) 
         self.titulo_tiempo.place(x=280,y=10)
 
-        # entradas de tiempo para corriente constante
+        # entradas de tiempo para corriente constante, el separador entre entradas y sus respectivas unidades
 
         self.tiempo1_in = Entry(master=self.frameCorriente, textvariable=self.tiempo1, width=5, font=self.fuente_sec)
         self.tiempo1_in.place(x=250,y=50)
@@ -180,7 +189,8 @@ class Interfaz:
         self.ms_decor1 =  Label(self.frameCorriente,width=2, text='mS', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2) 
         self.ms_decor1.place(x=415,y=50)
 
-        # entradas de tiempo adicionales para corriente variable
+        # entradas de tiempo adicionales para corriente variable,  el separador entre entradas y sus respectivas unidades
+
 
         self.tiempo3_in = Entry(master=self.frameCorriente, textvariable=self.tiempo3, width=5, font=self.fuente_sec)
         self.tiempo3_in.place(x=250,y=90)
@@ -198,14 +208,14 @@ class Interfaz:
         self.titulo_intensidad =  Label(self.frameCorriente,width=10, text='Intensidad', font=('math', 10, 'bold italic'),fg = self.color_blanco, bg =self.color_2)
         self.titulo_intensidad.place(x=460,y=10)
 
-        # intensidad corriente para corriente constante
+        # intensidad corriente para corriente constante, con borde amarillo y su respectiva etiqueta de unidades
         self.intensidad1_in = Entry(master=self.frameCorriente, textvariable=self.intensidad1, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
         self.intensidad1_in.place(x=470,y=50)
 
         self.ma_decor1 =  Label(self.frameCorriente,width=2, text='mA', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2) 
         self.ma_decor1.place(x=540,y=50)
 
-        # intensidad corriente para corriente variable
+        # intensidad corriente para corriente variable, con borde amarillo y su respectiva etiqueta de unidades
         self.intensidad2_in = Entry(master=self.frameCorriente, textvariable=self.intensidad2, width=5, font=self.fuente_sec, highlightthickness=2, highlightbackground = "yellow", highlightcolor= "yellow")
         self.intensidad2_in.place(x=470,y=90)
 
@@ -213,7 +223,7 @@ class Interfaz:
         self.ma_decor1 =  Label(self.frameCorriente,width=2, text='mA', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2) 
         self.ma_decor1.place(x=540,y=90)
 
-        # desactivo las entradas hasta que se seleccione un tipo de corriente y le cambio el bg para que se vea cool
+        # desactivo las entradas de intesidad variable hasta que se seleccione dicha opcion y le cambio el bg para que se vea cool
 
         self.tiempo3_in.configure(state="disabled", disabledbackground=self.color_3)
         self.tiempo4_in.configure(state="disabled", disabledbackground=self.color_3)
@@ -221,88 +231,117 @@ class Interfaz:
         
 
 
-        # contenido de metodos de solucion, los nombres de las variables son lo suficientemente dicientes para saber que es cada cosa.
-        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solución', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2)
+        # ----------------------------------------------contenido de metodos de solucion ------------------------------------
+        # titulo del apartado de metodos de solcion
+        self.metodos_lbl =  Label(self.frameMetodos, text='Métodos de solución', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
 
         self.metodos_lbl.place(x=35,y=10)
+
+        # boton para el metodo euler for y su respectivo color
+        self.metodos_decor1 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_efor) 
+        self.metodos_decor1.place(x=20,y=61)
 
         self.eulerfw_btn = Button(master=self.frameMetodos, text="Euler Adelante",  command = self.llamadoEulerFor, bg=self.color_3, fg = self.color_blanco,  width=20,height=1, font=self.fuente_ppal,border="0")
         self.eulerfw_btn.place(x=45,y=60)
 
+        # boton para el metodo euler back y su respectivo color
+
+        self.metodos_decor2 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_eback) 
+        self.metodos_decor2.place(x=20,y=101)
+
         self.eulerbk_btn = Button(master=self.frameMetodos, text="Euler Atrás",  command = self.llamadoEulerBack, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulerbk_btn.place(x=45,y=100)
+
+        # boton para el metodo euler modificado y su respectivo color
+        self.metodos_decor3 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_emod) 
+        self.metodos_decor3.place(x=20,y=141)
 
         self.eulermod_btn = Button(master=self.frameMetodos, text="Euler Mod",  command = self.llamadoEulerMod, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.eulermod_btn.place(x=45,y=140)
 
+        # boton para el metodo rk2 y su respectivo color
+        self.metodos_decor4 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_rk2) 
+        self.metodos_decor4.place(x=20,y=181)
+
         self.rk2_btn = Button(master=self.frameMetodos, text="Runge-Kutta 2",  command = self.llamadoRK2, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk2_btn.place(x=45,y=180)
+
+        # boton para el metodo rk4 y su respectivo color
+        self.metodos_decor5 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_rk4) 
+        self.metodos_decor5.place(x=20,y=221)
 
         self.rk4_btn = Button(master=self.frameMetodos, text="Runge-Kutta 4",  command = self.llamadoRK4, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.rk4_btn.place(x=45,y=220)
 
+        # boton para el metodo scipy y su respectivo color
+        self.metodos_decor6 =  Label(self.frameMetodos,width=2, text='', font=self.fuente_ppal,fg = self.color_blanco, bg =self.color_scipy) 
+        self.metodos_decor6.place(x=20,y=261)
+
         self.scipy_btn = Button(master=self.frameMetodos, text="Scipy",  command = self.llamadoScipy, bg=self.color_3, fg = self.color_blanco,  width=20, height=1, font=self.fuente_ppal,border="0")
         self.scipy_btn.place(x=45,y=260)
 
-        # contenido de parametros
-        # titulo
-        self.metodos_lbl =  Label(self.frameParametros, text='Parámetros', font=self.fuente_sec,fg = self.color_negro, bg =self.color_2)
+        # ------------------------------------------------- contenido de parametros -----------------------------------------------
+        # titulo del apartadode parametros
+        self.metodos_lbl =  Label(self.frameParametros, text='Parámetros', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
 
         self.metodos_lbl.place(x=75,y=10)
         # Parámetros
-        # 1
+        # etiqueta para el parametro Vm_0 y su respectiva entrada para cambiar el parametro
 
         self.Vm0_lbl =  Label(self.frameParametros,width=5, text='V'+u"\u2098\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
-        
         self.Vm0_lbl.place(x=30,y=60)
 
-        self.Vm0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=10, font=self.fuente_sec)
+        self.Vm0_in = Entry(master=self.frameParametros, textvariable=self.Vm_0, width=8, font=self.fuente_sec)
         self.Vm0_in.place(x=120,y=60)
+
+        self.Vm0_lbl_units =  Label(self.frameParametros,width=3, text='mV', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2)
+        self.Vm0_lbl_units.place(x=220,y=60)
         
-        # 2
+        # etiqueta para el parametro n_0 y su respectiva entrada para cambiar el parametro
 
         self.n0_lbl =  Label(self.frameParametros,width=5, text='n'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
-
         self.n0_lbl.place(x=30,y=100)
 
-        self.n0_in = Entry(master=self.frameParametros, textvariable=self.n0, width=10, font=self.fuente_sec)
+        self.n0_in = Entry(master=self.frameParametros, textvariable=self.n0, width=8, font=self.fuente_sec)
         self.n0_in.place(x=120,y=100)
 
-        #3
+        # etiqueta para el parametro m_0 y su respectiva entrada para cambiar el parametro
         self.m0_lbl =  Label(self.frameParametros,width=5, text='m'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
-
         self.m0_lbl.place(x=30,y=140)
 
-        self.m0_in = Entry(master=self.frameParametros, textvariable=self.m0, width=10, font=self.fuente_sec)
+        self.m0_in = Entry(master=self.frameParametros, textvariable=self.m0, width=8, font=self.fuente_sec)
         self.m0_in.place(x=120,y=140)
 
 
-        #4
+        # etiqueta para el parametro h_0 y su respectiva entrada para cambiar el parametro
         self.h0_lbl =  Label(self.frameParametros,width=5, text='h'+u"\u2080"+":", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1)
-
         self.h0_lbl.place(x=30,y=180)
 
-        self.h0_in = Entry(master=self.frameParametros, textvariable=self.h0, width=10, font=self.fuente_sec)
+        self.h0_in = Entry(master=self.frameParametros, textvariable=self.h0, width=8, font=self.fuente_sec)
         self.h0_in.place(x=120,y=180)
 
 
-        #5
+        # etiqueta para el parametro Temperatura y su respectiva entrada para cambiar el parametro
         self.T_lbl =  Label(self.frameParametros,width=5, text='T:', font=self.fuente_sec,fg = self.color_blanco, bg =self.color_1) 
-
         self.T_lbl.place(x=30,y=220)
 
-        self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=10, font=self.fuente_sec)
+        self.T_in = Entry(master=self.frameParametros, textvariable=self.T, width=8, font=self.fuente_sec)
         self.T_in.place(x=120,y=220)
+
+        self.T_lbl_units =  Label(self.frameParametros,width=3, text=u"\N{DEGREE SIGN}C", font=self.fuente_sec,fg = self.color_blanco, bg =self.color_2)
+        self.T_lbl_units.place(x=220,y=220)
     
     def limpiarGrafica(self):
-        self.plot.cla()
+        ''' Funcion que limpia las grafica y las listas donde se guardan los datos para los metodos de persistencia
+        '''
+        self.plot.cla() # lipio toda la grafica, esto elimina incluso los titulos por lo que debo volver a ponerlos despues de esto
         grafFont = FontProperties()
-        grafFont.set_family('serif')   # Define que las fuentes usadas en el gráfico son serifadas.
+        grafFont.set_family('serif')                                                           # Define que las fuentes usadas en el gráfico son serifadas.
         self.plot.set_xlabel(r'$t\ \ [mS]$',fontsize='x-large', fontproperties=grafFont)       # Título secundario del eje x
         self.plot.set_ylabel(r'$V_m\ [mV]$ ',fontsize='large', fontproperties=grafFont)        # Título secundario del eje y
-            
-        self.plot.set_title('Potencial de acción de una neurona', fontsize='x-large', fontproperties=grafFont)
-        self.imagenGrafica.draw()
+        self.plot.set_title('Potencial de acción de una neurona', fontsize='x-large', fontproperties=grafFont) # titulo principal
+        self.imagenGrafica.draw()                                                              # Una vez agregado todo dibujo la grafica en la interfaz
+        # vuelvo a poner el valor vacio en las listas que guardan los datos para los metodos de persistencia
         self.eForSet = []
         self.eBackSet = []
         self.eModSet = []
@@ -311,6 +350,9 @@ class Interfaz:
         self.scipySet = []
 
     def actualizarParametros(self):
+        ''' Metodo que sera llamado cada vez que se desee ejecutar un algoritmo, esto con el fin de siempre tener los parametros actualizados
+        '''
+        # obtengo los valores de cada entrada de las varibales en la interfaz
         pVm0 = float(self.Vm_0.get())
         pN0 = float(self.n0.get())
         pM0 = float(self.m0.get())
@@ -323,68 +365,113 @@ class Interfaz:
         pTiempo4=0
         pIntensidad1=float(self.intensidad1.get())
         pIntensidad2=0
+        # si la opcion es corriente variable entonces obtengo los valores adicionales si no estos permanecen como 0
         if pOpcion == 2:
             pTiempo3=float(self.tiempo3.get())
             pTiempo4=float(self.tiempo4.get())
             pIntensidad2=float(self.intensidad2.get())
+        # devuelvo los parametros ordenados
         return (pVm0,pN0,pM0,pH0,pT,pOpcion,pTiempo1,pTiempo2,pTiempo3,pTiempo4,pIntensidad1,pIntensidad2)
 
 
     def llamadoEulerFor(self):
+        ''' Metodo que llamara la funcion definida en la logica para el metodo euler forward con los parametros que tenga la interfaz en este momento
+        '''
+        # se piden los parametros a la interfaz
         parametros = self.actualizarParametros()
+        # llamo la funcion de la logica para el metodo y obtengo los valores de x y y a graficar
         t_eFor,V_eFor = EulerFor(*parametros)
+        # agregro los valores como una tupla en la variable que guarda las ejecuciones para los metodos de persistencia
         self.eForSet.append((t_eFor,V_eFor))
-        self.plot.plot(t_eFor, V_eFor)
+        # grafico los puntos con el respectivo color asignado para el metodo, variable que se puede cambiar en el init
+        self.plot.plot(t_eFor, V_eFor,color=self.color_efor)
+        # una vez se añade todo al plot procedo a mostrarlo en la interfaz con el metodo draw del canvas definido para la grafica
         self.imagenGrafica.draw()
 
 
     def llamadoEulerBack(self):
+        ''' Metodo que llamara la funcion definida en la logica para el metodo euler back con los parametros que tenga la interfaz en este momento
+        '''
+        # se piden los parametros a la interfaz
         parametros = self.actualizarParametros()
+        # llamo la funcion de la logica para el metodo y obtengo los valores de x y y a graficar
         t_eBack,V_eBack = EulerBack(*parametros)
+        # agregro los valores como una tupla en la variable que guarda las ejecuciones para los metodos de persistencia
         self.eBackSet.append((t_eBack,V_eBack))
-        self.plot.plot(t_eBack,V_eBack)
+        # grafico los puntos con el respectivo color asignado para el metodo, variable que se puede cambiar en el init
+        self.plot.plot(t_eBack,V_eBack,color=self.color_eback)
+        # una vez se añade todo al plot procedo a mostrarlo en la interfaz con el metodo draw del canvas definido para la grafica
         self.imagenGrafica.draw()
 
 
     def llamadoEulerMod(self):
+        ''' Metodo que llamara la funcion definida en la logica para el metodo euler modificado con los parametros que tenga la interfaz en este momento
+        '''
+        # se piden los parametros a la interfaz
         parametros = self.actualizarParametros()
+        # llamo la funcion de la logica para el metodo y obtengo los valores de x y y a graficar
         t_eMod,V_eMod = EulerMod(*parametros)
+        # agregro los valores como una tupla en la variable que guarda las ejecuciones para los metodos de persistencia
         self.eModSet.append((t_eMod,V_eMod))
-        self.plot.plot(t_eMod, V_eMod)
+        # grafico los puntos con el respectivo color asignado para el metodo, variable que se puede cambiar en el init
+        self.plot.plot(t_eMod, V_eMod, color=self.color_emod)
         self.imagenGrafica.draw()
 
 
     def llamadoRK2(self):
+        ''' Metodo que llamara la funcion definida en la logica para el metodo runge-kutta 2 con los parametros que tenga la interfaz en este momento
+        '''
+        # se piden los parametros a la interfaz
         parametros = self.actualizarParametros()
+        # llamo la funcion de la logica para el metodo y obtengo los valores de x y y a graficar
         t_RK2,V_RK2 = RK2(*parametros)
+        # agregro los valores como una tupla en la variable que guarda las ejecuciones para los metodos de persistencia
         self.RK2Set.append((t_RK2,V_RK2))
-        self.plot.plot(t_RK2, V_RK2)
+        # grafico los puntos con el respectivo color asignado para el metodo, variable que se puede cambiar en el init
+        self.plot.plot(t_RK2, V_RK2, color=self.color_rk2)
+        # una vez se añade todo al plot procedo a mostrarlo en la interfaz con el metodo draw del canvas definido para la grafica
         self.imagenGrafica.draw()
     
 
     def llamadoRK4(self):
+        ''' Metodo que llamara la funcion definida en la logica para el metodo runge-kutta 4 con los parametros que tenga la interfaz en este momento
+        '''
+        # se piden los parametros a la interfaz
         parametros = self.actualizarParametros()
+        # llamo la funcion de la logica para el metodo y obtengo los valores de x y y a graficar
         t_RK4,V_RK4 = RK4(*parametros)
+        # agregro los valores como una tupla en la variable que guarda las ejecuciones para los metodos de persistencia
         self.RK4Set.append((t_RK4,V_RK4))
-        self.plot.plot(t_RK4, V_RK4)
+        # grafico los puntos con el respectivo color asignado para el metodo, variable que se puede cambiar en el init
+        self.plot.plot(t_RK4, V_RK4, color=self.color_rk4)
+        # una vez se añade todo al plot procedo a mostrarlo en la interfaz con el metodo draw del canvas definido para la grafica
         self.imagenGrafica.draw()
     
     def llamadoScipy(self):
+        ''' Metodo que llamara la funcion definida en la logica para el metodo implementado con scipy con los parametros que tenga la interfaz en este momento
+        '''
+        # se piden los parametros a la interfaz
         parametros = self.actualizarParametros()
+        # llamo la funcion de la logica para el metodo y obtengo los valores de x y y a graficar
         t_SCIPY,V_SCIPY = SCIPY(*parametros)
+        # agregro los valores como una tupla en la variable que guarda las ejecuciones para los metodos de persistencia
         self.scipySet.append((t_SCIPY,V_SCIPY))
-        self.plot.plot(t_SCIPY, V_SCIPY)
+        # grafico los puntos con el respectivo color asignado para el metodo, variable que se puede cambiar en el init
+        self.plot.plot(t_SCIPY, V_SCIPY, color=self.color_scipy)
+        # una vez se añade todo al plot procedo a mostrarlo en la interfaz con el metodo draw del canvas definido para la grafica
         self.imagenGrafica.draw()
 
 
     def estadoEntradaCorriente(self):
         ''' Funcion que activa las entradas correspondientes a la opcion de corriente indicacda en la variable opcion, 1 para corriente constante y 2 para corriente variable
         '''
-        opt = self.opcion.get()
+        opt = self.opcion.get() # obtengo el valor de la opcion actual en la interfaz
+        # si la opcion es 1 entonces desabilito las entradas adicionales
         if opt == 1:
             self.tiempo3_in.configure(state="disabled")
             self.tiempo4_in.configure(state="disabled")
             self.intensidad2_in.configure(state="disabled")
+        # si la opcion es 2 entonces activo las entradas adicionales
         elif opt == 2:
             self.tiempo3_in.configure(state="normal")
             self.tiempo4_in.configure(state="normal")
@@ -394,181 +481,120 @@ class Interfaz:
     def cerrarAplicacion(self):
         ''' Funcion que es llamada al hacer click en el boton cerrar, pregunta si realmente se desea cerrar o retornar a la aplicacion
         '''
+        # creo la caja de mensaje y su valor
         MsgBox =  messagebox.askquestion ('Cerrar Aplicación','¿Está seguro que desea cerrar la aplicación?', icon = 'warning')
+        # si el valor es yes entonces cierro la apliacion
         if MsgBox == 'yes':
-            self.ventana.destroy()     #FIXME Botón de cierre no funciona.
+            self.ventana.destroy()     
             self.ventana.quit()
+        # en caso contrario se notifica el retorono a la aplicacion
         else:
             messagebox.showinfo('Retornar','Será retornado a la aplicación')
     
+    def auxGuardar(self, directorio, extencion, listaDatos):
+        ''' Metodo auxiliar que ayudara al guardado de archivos, es definido para evitar redundacia en codigo
+        '''
+         
+        # genero un proceso iterativo para leer todas las lineas graficadas en el listado de datos el cual tiene en cada posicion un conjunto (X,Y)
+        for i,val in enumerate(listaDatos):
+            # obtengo el listado de datos de X 
+            x_data = val[0]
+            # obtengo el listado de datos deY
+            y_data = val[1]
+            # las empaqueto en formatodouble
+            x_packed = st.pack('d'*len(x_data),*x_data)
+            y_packed = st.pack('d'*len(y_data),*y_data)
+            # creo el archivo con el nombre i.extencion para hacer la lectura despues de forma facil ejemplo 0.efor
+            with open(directorio.joinpath(str(i)+extencion).absolute(),'wb') as f:
+                # escribo los datos de X en el archivo
+                f.write(x_packed)
+                # escribo los datos de Y en el archivo
+                f.write(y_packed)
+                # Nota: el orden es importante ya que en la lectura se obtendra un set completo por lo que la primera mitad sera X y la segunda mitad sera Y
 
     def guardarDatos(self):
         ''' Funcion que abre un dialogo para ingresar el nombre de un archivo para guardar el resultado de una ejecucion de algoritmo en formato double
         '''
-        ahora = time()
-        directorioNombre = filedialog.askdirectory(title="Directorio de datos generados")
+        ahora = time() # obtengo el timestamp actual
+        fecha = dt.datetime.utcfromtimestamp(ahora).strftime("%Y-%m-%d_%H-%M-%S") # genero la fecha actual con el time stamp obtenido previamente
+        nombreCarpetaDatos = 'Datos_' + fecha # contruyo el nombre de la carpeta donde se guardaran los archivos con el nombre Datos_Fecha
+        # pido el directorio donde se creara la carpeta en la que se guardaran los datos
+        directorioNombre = filedialog.askdirectory(parent = self.ventana,initialdir=self.directorioActual,title="Directorio de guardado de datos") 
+        # si el directorio es vacio quiere decir que se cerro la ventana sin escojer por lo que la funcion no hara nada y se retorna
         if directorioNombre == '':
             return
+        # si hay algo en el directorio se procede a crear una clase path con el parametro obtenido en el dialog para asi manejar de manera mas simple el path
         directorioDatos = Path(directorioNombre)
-        carpetaDatos = directorioDatos.joinpath(str(ahora))
-        try:
-
-            carpetaDatos.mkdir(parents=True, exist_ok=True)
-
-            for i,val in enumerate(self.eForSet):
-                x_data = val[0]
-                y_data = val[1]
-                x_packed = st.pack('d'*len(x_data),*x_data)
-                y_packed = st.pack('d'*len(y_data),*y_data)
-                with open(carpetaDatos.joinpath(str(i)+'.efor').absolute(),'wb') as f_efor:
-                    f_efor.write(x_packed)
-                    f_efor.write(y_packed)
-
-            for i,val in enumerate(self.eBackSet):
-                x_data = val[0]
-                y_data = val[1]
-                x_packed = st.pack('d'*len(x_data),*x_data)
-                y_packed = st.pack('d'*len(y_data),*y_data)
-                with open(carpetaDatos.joinpath(str(i)+'.eback').absolute(),'wb') as f_efor:
-                    f_efor.write(x_packed)
-                    f_efor.write(y_packed)
-
-            for i,val in enumerate(self.eModSet):
-                x_data = val[0]
-                y_data = val[1]
-                x_packed = st.pack('d'*len(x_data),*x_data)
-                y_packed = st.pack('d'*len(y_data),*y_data)
-                with open(carpetaDatos.joinpath(str(i)+'.emod').absolute(),'wb') as f_efor:
-                    f_efor.write(x_packed)
-                    f_efor.write(y_packed)
-
-            for i,val in enumerate(self.RK2Set):
-                x_data = val[0]
-                y_data = val[1]
-                x_packed = st.pack('d'*len(x_data),*x_data)
-                y_packed = st.pack('d'*len(y_data),*y_data)
-                with open(carpetaDatos.joinpath(str(i)+'.rk2').absolute(),'wb') as f_efor:
-                    f_efor.write(x_packed)
-                    f_efor.write(y_packed)
-
-            for i,val in enumerate(self.RK4Set):
-                x_data = val[0]
-                y_data = val[1]
-                x_packed = st.pack('d'*len(x_data),*x_data)
-                y_packed = st.pack('d'*len(y_data),*y_data)
-                with open(carpetaDatos.joinpath(str(i)+'.rk4').absolute(),'wb') as f_efor:
-                    f_efor.write(x_packed)
-                    f_efor.write(y_packed)
-
-            for i,val in enumerate(self.scipySet):
-                x_data = val[0]
-                y_data = val[1]
-                x_packed = st.pack('d'*len(x_data),*x_data)
-                y_packed = st.pack('d'*len(y_data),*y_data)
-                with open(carpetaDatos.joinpath(str(i)+'.scipy').absolute(),'wb') as f_efor:
-                    f_efor.write(x_packed)
-                    f_efor.write(y_packed)
-            
-        except:
-            pass
+        # se crea el path a la carpeta nueva con el nombre previamente generaro y se manda el comando al sistema para que la cree como carpeta
+        carpetaDatos = directorioDatos.joinpath(str(nombreCarpetaDatos))
+        carpetaDatos.mkdir(parents=True, exist_ok=True)
+        # llamo a la funcion auxiliar con el la carpeta donde se guardaran los datos, la extencion con la que se guardaran y el listado del que leera los datos a guardar
+        self.auxGuardar(carpetaDatos,'.efor',self.eForSet)
+        self.auxGuardar(carpetaDatos,'.eback',self.eBackSet)
+        self.auxGuardar(carpetaDatos,'.emod',self.eModSet)
+        self.auxGuardar(carpetaDatos,'.rk2',self.RK2Set)
+        self.auxGuardar(carpetaDatos,'.rk4',self.RK4Set)
+        self.auxGuardar(carpetaDatos,'.scipy',self.scipySet)
         
+    def auxCargar(self, directorio, extencion, color_grafica):
+        ''' Metodo auxiliar que ayudara a la carga de archivos, es definido para evitar redundacia en codigo
+        retorna una lista con los valores leidos de X y Y de los archivos que encuentre en el path especificado con la extencion especificada
+        '''
+        # obtengo el nombre de todos los arvhicos con la extencion deseada
+        files = [f.absolute() for f in directorio.glob('*'+extencion) if f.is_file()]
+        tmpSet = [] # variable donde se guardaran los conjuntos
+        # proceso iterativo que lee cada archivo
+        for tmpF in files:
+            with open(tmpF,'rb') as f:
+                # leo el contenido del archivo
+                data = f.read()
+                # desempaqueto el contenido del arvhivo y lo convierto en lista para manipularlo
+                unpacked = list(st.unpack('d'*(len(data)//8),data))
+                # obtengo la mitad del tamaño para poder partir el array
+                tam = len(unpacked)//2
+                # genero los valores de X con la mitad de los datos y lo vuelvo un array de numpy
+                t = np.array(unpacked[:tam])
+                # genero los valores de Y con la segunda mitad de los datos y lo vuelvo un array de numpy
+                V = np.array(unpacked[tam:])
+                # grafico la linea con el color que debe ir
+                self.plot.plot(t,V,color=color_grafica)
+                # guardo los valore de X y Y en la lista temporal que se retornara al final de este metodo
+                tmpSet.append((t,V))
+        # retorno la lista resultante de la lectura de los archivos con la extencion
+        return tmpSet
+
 
     def cargarDatos(self):
         ''' Funcion que abre un dialogo para seleccionar un archivo del cual se cargaran los datos de una ejecucion previa en formato double
         '''
-        directorioNombre = filedialog.askdirectory(title="Directorio de datos generados")
+        # pido el directorio donde se encuentran los datos previamente generados
+        directorioNombre = filedialog.askdirectory(parent = self.ventana,initialdir=self.directorioActual,title="Directorio de datos generados")
+        # si el directorio es vacio quiere decir que se cerro la ventana sin escojer por lo que la funcion no hara nada y se retorna
         if directorioNombre == '':
             return
+        # si hay algo en el directorio se procede a crear una clase path con el parametro obtenido en el dialog para asi manejar de manera mas simple el path
         directorioDatos = Path(directorioNombre)
-        try:
-            filesEfor = [f.absolute() for f in directorioDatos.glob('*.efor') if f.is_file()]
-            filesEback = [f.absolute() for f in directorioDatos.glob('*.eback') if f.is_file()]
-            filesEmod = [f.absolute() for f in directorioDatos.glob('*.emod') if f.is_file()]
-            filesRK2 = [f.absolute() for f in directorioDatos.glob('*.rk2') if f.is_file()]
-            filesRK4 = [f.absolute() for f in directorioDatos.glob('*.rk4') if f.is_file()]
-            filesScipy = [f.absolute() for f in directorioDatos.glob('*.scipy') if f.is_file()]
-            
-            tmpSetEfor = []
-            tmpSetEback = []
-            tmpSetEmod = []
-            tmpSetRK2 = []
-            tmpSetRK4 = []
-            tmpSetScipy = []
-
-            for fileEfor in filesEfor:
-                with open(fileEfor,'rb') as f:
-                    data = f.read()
-                    unpacked = list(st.unpack('d'*(len(data)//8),data))
-                    tam = len(unpacked)//2
-                    t_eFor = np.array(unpacked[:tam])
-                    V_eFor = np.array(unpacked[tam:])
-                    self.plot.plot(t_eFor,V_eFor)
-                    tmpSetEfor.append((t_eFor,V_eFor))
-            
-            
-            for fileEback in filesEback:
-                with open(fileEback,'rb') as f:
-                    data = f.read()
-                    unpacked = list(st.unpack('d'*(len(data)//8),data))
-                    tam = len(unpacked)//2
-                    t_eBack = np.array(unpacked[:tam])
-                    V_eBack = np.array(unpacked[tam:])
-                    self.plot.plot(t_eBack,V_eBack)
-                    tmpSetEback.append((t_eBack,V_eBack))
-            
-            for fileEmod in filesEmod:
-                with open(fileEmod,'rb') as f:
-                    data = f.read()
-                    unpacked = list(st.unpack('d'*(len(data)//8),data))
-                    tam = len(unpacked)//2
-                    t_eMod = np.array(unpacked[:tam])
-                    V_eMod = np.array(unpacked[tam:])
-                    self.plot.plot(t_eMod,V_eMod)
-                    tmpSetEmod.append((t_eMod,V_eMod))
-            
-            for fileRK2 in filesRK2:
-                with open(fileRK2,'rb') as f:
-                    data = f.read()
-                    unpacked = list(st.unpack('d'*(len(data)//8),data))
-                    tam = len(unpacked)//2
-                    t_RK2 = np.array(unpacked[:tam])
-                    V_RK2 = np.array(unpacked[tam:])
-                    self.plot.plot(t_RK2,V_RK2)
-                    tmpSetRK2.append((t_RK2,V_RK2))
-            
-            for fileRK4 in filesRK4:
-                with open(fileRK4,'rb') as f:
-                    data = f.read()
-                    unpacked = list(st.unpack('d'*(len(data)//8),data))
-                    tam = len(unpacked)//2
-                    t_RK4 = np.array(unpacked[:tam])
-                    V_RK4 = np.array(unpacked[tam:])
-                    self.plot.plot(t_RK4,V_RK4)
-                    tmpSetRK4.append((t_RK4,V_RK4))
-            
-            for fileScipy in filesScipy:
-                with open(fileScipy,'rb') as f:
-                    data = f.read()
-                    unpacked = list(st.unpack('d'*(len(data)//8),data))
-                    tam = len(unpacked)//2
-                    t_SCIPY = np.array(unpacked[:tam])
-                    V_SCIPY = np.array(unpacked[tam:])
-                    self.plot.plot(t_SCIPY,V_SCIPY)
-                    tmpSetScipy.append((t_SCIPY,V_SCIPY))
-            
-            self.eForSet+=tmpSetEfor
-            self.eBackSet+=tmpSetEback
-            self.eModSet+=tmpSetEmod
-            self.RK2Set+=tmpSetRK2
-            self.RK4Set+=tmpSetRK4
-            self.scipySet+=tmpSetScipy
-            self.imagenGrafica.draw()
-
-        except:
-            pass
+        # se llama a la funcion auxiliar que lee los archivos con la extencion y añade los datos a la grafica
+        tmpSetEfor = self.auxCargar(directorioDatos,'.efor', self.color_efor)
+        tmpSetEback = self.auxCargar(directorioDatos,'.eback', self.color_eback)
+        tmpSetEmod = self.auxCargar(directorioDatos,'.emod', self.color_emod)
+        tmpSetRK2 = self.auxCargar(directorioDatos,'.rk2', self.color_rk2)
+        tmpSetRK4 = self.auxCargar(directorioDatos,'.rk4',self.color_rk4)
+        tmpSetScipy = self.auxCargar(directorioDatos,'.scipy', self.color_scipy)
+        # agrego los datos cargados a los existentes en las listas que almacenan estos para la persistencia
+        self.eForSet+=tmpSetEfor
+        self.eBackSet+=tmpSetEback
+        self.eModSet+=tmpSetEmod
+        self.RK2Set+=tmpSetRK2
+        self.RK4Set+=tmpSetRK4
+        self.scipySet+=tmpSetScipy
+        # despues de todo lo anterior actualizo el grafico en la interfaz con el metodo draw definido para un canvas
+        self.imagenGrafica.draw()
 
 
     def iniciar(self):
+        ''' Metodo que inicia la interfaz con el main loop, este metodo se define por tener orden en toda la clase y no hacer accesos externos al parametro de ventana
+        '''
         self.ventana.mainloop()
 
 
