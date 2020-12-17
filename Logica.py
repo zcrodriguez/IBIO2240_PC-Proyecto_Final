@@ -1,10 +1,9 @@
-##
+## Se importan librerías para implementar los métodos numéricos.
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
-import scipy.integrate as inte
 from scipy.integrate import odeint
-from matplotlib import rcParams     # Esto es para modificar el estilo de fuente de los gráficos.
+from matplotlib import rcParams         # Esto es para modificar el estilo de fuente de los gráficos.
 
 
 '''=====================================================================================================================
@@ -27,13 +26,12 @@ E_Na = 50.0     # [mV]
 # Potencial de equilibrio de Nernst de K+
 E_K = -77.0     # [mV]
 
-# Potencial de equilibrio de Nernst del canal de fuga.
+# Potencial de equilibrio de Nernst del canal de fuga
 E_L = -54.4     # [mV]
 
 
 # Capacitancia de la membrana por unidad de área
 C_M = 1.0       # [µF/cm^2]
-
 
 
 # ===============================            CONSTANTES DEL I-ÉSIMO CANAL IÓNICO         ===============================
@@ -63,23 +61,23 @@ def alpha_m(Vm):
     return (0.1 * (Vm + 40.0)) / (1.0 - np.exp(-(Vm + 40.0) / 10.0))
 
 
-
 # ====================================            FACTOR DE TEMPERATURA (Φ)         ====================================
 
 def phi(T):
-    '''
+    """
     :param T: [°C] Temperatura
     :return: Factor que cuantifica la rapidez de cambios en los canales iónicos debido a la temperatura (T).
-    '''
+    """
+
     Q_10 = 3        # Radio de las tasas por un incremento de temperatura de 10 °C
     T_base = 6.3    # Temperatura base [°C]
-    return (Q_10) ** ((T - T_base) / 10.0)
+    return Q_10 ** ((T - T_base) / 10.0)
 
 
 #==================================            TIEMPO & CORRIENTE (t & I(t))         ===================================
 
 def tiempo_y_corriente(opcion, t1, t2, t3, t4, I1, I2, resol):
-    '''
+    """
     :param opcion: * 1: Si la corriente es fija. * 2: Si la corriente es variable.
     :param t1: [mS] Valor inicial del intervalo de tiempo 1.
     :param t2: [mS] Valor final del intervalo de tiempo 1.
@@ -88,8 +86,8 @@ def tiempo_y_corriente(opcion, t1, t2, t3, t4, I1, I2, resol):
     :param I1: [mV] Intensidad de corriente del intervalo de tiempo 1.
     :param I2: [mV] Intensidad de corriente del intervalo de tiempo 2.
     :param resol: [mS] Resolución o Step de tiempo para crear el rango.
-    :return: Tupla (t,I) -> t: Intervalo de tiempo de simulación. I: Intensidad de corriente durante el tiempo t.
-    '''
+    :return: Tupla [t,I] -> t: Intervalo de tiempo de simulación. I: Intensidad de corriente durante el tiempo t.
+    """
 
     # PARTE I - Se crea el arreglo de tiempo
 
@@ -105,7 +103,7 @@ def tiempo_y_corriente(opcion, t1, t2, t3, t4, I1, I2, resol):
 
     # Intervalo 1
     IInd = np.where((t >= t1) & (t <= t2))      # np.where retorna los t que están en el intervalo 1.
-    I[IInd] = I1                                # Para los t hallados por np.where en el arreglo se asigna-
+    I[IInd] = I1                                # Para los t hallados por np.where en el arreglo se asigna.
 
     # Intervalo 2 - Aplica cuando la corriente es variable.
     if opcion==2:
@@ -115,19 +113,17 @@ def tiempo_y_corriente(opcion, t1, t2, t3, t4, I1, I2, resol):
     return t, I
 
 
-
 #=======================================    ARREGLOS QUE ALMACENAN SOLUCIONES   ========================================
 def creacionArreglos(V_m0,n_0,m_0,h_0,t):
-
-    '''
+    """
     :param V_m0: Potencial de membrana inicial
     :param n_0: Probabilidad inicial de n
     :param m_0: Probabilidad inicial de m
     :param h_0: Probabilidad inicial de h
     :param t: Arreglo de tiempo de la simulación (tiempo graficado).
-    :return: Tupla ( V_m(t), n(t), m(t), h(t) ) -> Arreglos para almacenar potencial de membrana (V_m)
+    :return: [ V_m(t), n(t), m(t), h(t) ] -> Arreglos para almacenar potencial de membrana (V_m)
     & prob. de n, m y h respecto al tiempo t. Estos arreglos se inicializan respectivamente con V_m0, n_0, m_0 y h_0
-    '''
+    """
 
     # Se crean los arreglos
     Vm_array = np.zeros(len(t))
@@ -142,7 +138,6 @@ def creacionArreglos(V_m0,n_0,m_0,h_0,t):
     h_array[0] = h_0
 
     return Vm_array, n_array, m_array, h_array
-
 
 
 '''=====================================================================================================================
@@ -181,48 +176,95 @@ def dh_dt(phi,Vm,h):
     return phi * (alpha_h(Vm) * (1 - h) - beta_h(Vm) * h)
 
 
-
 '''=====================================================================================================================
-                                        SOLUCIÓN DE SISTEMAS DE ECUACIONES
+                                            SOLUCIÓN DE SISTEMAS DE ECUACIONES
 ====================================================================================================================='''
+
 
 #=============================================    FUNCIONES AUXILIARES   ===============================================
 
 # II. EULER HACIA ATRÁS (BACKWARD)
 # Permite convertir el problema en un sistema multivariable para poder resolverlo con fsolve.
-# y_i = y_(i-1) + h * F(y_i)    →   0 = y_(i-1) + h * F(y_i) - y_i
 
 def FAux_EulerBack(Aux, I, Vm, n, m, h, phi_val, h_res):
+    """
+    :param Aux: Matriz auxiliar que almacenará los vectores de solución de la iteración actual (i) para
+    [0] Vm, [1] n, [2] m y [3] h.
+    :param I: Arreglo de corrientes para cada uno de los tiempos simulados. I(i).
+    :param Vm: Arreglo de soluciones del potencial de membrana evaluado en la iteración anterior. Vm[i-1].
+    :param n: Arreglo de soluciones de la probabilidad de n evaluado en la iteración anterior. n[i-1].
+    :param m: Arreglo de soluciones de la probabilidad de n evaluado en la iteración anterior. m[i-1].
+    :param h: Arreglo de soluciones de la probabilidad de n evaluado en la iteración anterior. h[i-1].
+    :param phi_val: Factor de temperatura calculado para la temperatura T indicada por el usuario. Φ(T).
+    :param h_res:
+    :return: Función con un sistema de EDO's derivado del modelo matemático de Hodking y Huxley, el cual sirve para
+    resolver el sistema, usando fsolve (de Scipy), por el MÉTODO DE EULER HACIA ATRÁS (BACKWARD).
+    """
+
+    # y_i = y_(i-1) + h * F(y_i)    →   0 = y_(i-1) + h * F(y_i) - y_i
     return [Vm + h_res * dV_dt(I, Aux[0], Aux[1], Aux[2], Aux[3]) - Aux[0],
             n + h_res * dn_dt(phi_val, Aux[0], Aux[1]) - Aux[1],
             m + h_res * dm_dt(phi_val, Aux[0], Aux[2]) - Aux[2],
             h + h_res * dh_dt(phi_val, Aux[0], Aux[3]) - Aux[3]]
 
+
 # III. EULER MODIFICADO (MOD)
 # Permite convertir el problema en un sistema multivariable para poder resolverlo con fsolve.
-# y_i = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)]    →   0 = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)] - y_i
 
 def FAux_EulerMod(Aux, I, Vm, n, m, h, phi_val, h_res):
+    """
+    :param Aux: Matriz auxiliar que almacenará los vectores de solución de la iteración actual (i) para
+    [0] Vm, [1] n, [2] m y [3] h.
+    :param I: Arreglo de corrientes para cada uno de los tiempos simulados. I(i).
+    :param Vm: Arreglo de soluciones del potencial de membrana evaluado en la iteración anterior. Vm[i-1].
+    :param n: Arreglo de soluciones de la probabilidad de n evaluado en la iteración anterior. n[i-1].
+    :param m: Arreglo de soluciones de la probabilidad de n evaluado en la iteración anterior. m[i-1].
+    :param h: Arreglo de soluciones de la probabilidad de n evaluado en la iteración anterior. h[i-1].
+    :param phi_val: Factor de temperatura calculado para la temperatura T indicada por el usuario. Φ(T).
+    :param h_res:
+    :return: Función con un sistema de EDO's derivado del modelo matemático de Hodking y Huxley, el cual sirve para
+    resolver el sistema, usando fsolve (de Scipy), por el MÉTODO DE EULER HACIA ATRÁS (BACKWARD).
+    """
+
+    # y_i = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)]    →   0 = y_(i-1) + h/2 * [F(y_(i-1))+F(y_i)] - y_i
     return [Vm + (h_res / 2.0) * (dV_dt(I, Vm, n, m, h) + dV_dt(I, Aux[0], Aux[1], Aux[2], Aux[3])) - Aux[0],
             n + (h_res / 2.0)  * (dn_dt(phi_val, Vm, n) + dn_dt(phi_val, Aux[0], Aux[1])) - Aux[1],
             m + (h_res / 2.0)  * (dm_dt(phi_val, Vm, m) + dm_dt(phi_val, Aux[0], Aux[2])) - Aux[2],
             h + (h_res / 2.0)  * (dh_dt(phi_val, Vm, h) + dh_dt(phi_val, Aux[0], Aux[3])) - Aux[3]]
 
 
-
 #==============================================    MÉTODOS NUMÉRICOS   =================================================
 
 # I. EULER FORWARD
-# Las ecuaciones fueron formuladas siguiendo el formato y_(i) = y_(i-1)+h[F(y_(i-1))]
 
 def EulerFor(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
+    """
+    :param V_m0: Potencial de membrana inicial
+    :param n_0: Probabilidad inicial de n
+    :param m_0: Probabilidad inicial de m
+    :param h_0: Probabilidad inicial de h
+    :param T: Temperatura indicada por el usuario
+    :param opcion: * 1: Si la corriente es fija. * 2: Si la corriente es variable.
+    :param t1: [mS] Valor inicial del intervalo de tiempo 1.
+    :param t2: [mS] Valor final del intervalo de tiempo 1.
+    :param t3: [mS] Valor inicialdel intervalo de tiempo 2.
+    :param t4: [mS] Valor final del intervalo de tiempo 2.
+    :param I1: [mV] Intensidad de corriente del intervalo de tiempo 1.
+    :param I2: [mV] Intensidad de corriente del intervalo de tiempo 2.
+    :param h_res: [mS] Resolución o Step de tiempo para crear el rango. Default = 0.01 [mS]
+    :return: Tupla [t,Vm_EulerFor] -> t: Intervalo de tiempo de simulación.
+    Vm_EulerFor: Potencial de membrana para cada tiempo t de la simulación.
+    """
 
-    phi_val = phi(T)
-    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)
+    phi_val = phi(T)                                            # Se calcula el factor de temperatura (Φ)
+    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)   # Se crean arreglos de tiempo de simulación y corriente
+
+    # Se crean los vectores que almacenarán las soluciones (estimaciones) para Vm(t), n(t), m(t) y h(t) de cada iterac.
     Vm_EulerFor, n_EulerFor, m_EulerFor, h_EulerFor = creacionArreglos(V_m0,n_0,m_0,h_0, t)
 
     for iter in range(1, len(t)):
 
+        # Las ecuaciones fueron formuladas siguiendo el formato y_(i) = y_(i-1)+h[F(y_(i-1))]
         Vm_EulerFor[iter] = Vm_EulerFor[iter - 1] + h_res * dV_dt(I[iter],
                                                                   Vm_EulerFor[iter - 1],
                                                                   n_EulerFor[iter - 1],
@@ -235,15 +277,35 @@ def EulerFor(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
     return t, Vm_EulerFor
 
 
-
 # II. EULER BACKWARD
 
 def EulerBack(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
+    """
+    :param V_m0: Potencial de membrana inicial
+    :param n_0: Probabilidad inicial de n
+    :param m_0: Probabilidad inicial de m
+    :param h_0: Probabilidad inicial de h
+    :param T: Temperatura indicada por el usuario
+    :param opcion: * 1: Si la corriente es fija. * 2: Si la corriente es variable.
+    :param t1: [mS] Valor inicial del intervalo de tiempo 1.
+    :param t2: [mS] Valor final del intervalo de tiempo 1.
+    :param t3: [mS] Valor inicialdel intervalo de tiempo 2.
+    :param t4: [mS] Valor final del intervalo de tiempo 2.
+    :param I1: [mV] Intensidad de corriente del intervalo de tiempo 1.
+    :param I2: [mV] Intensidad de corriente del intervalo de tiempo 2.
+    :param h_res: [mS] Resolución o Step de tiempo para crear el rango. Default = 0.01 [mS]
+    :return: Tupla [t,Vm_EulerBack] -> t: Intervalo de tiempo de simulación.
+    Vm_EulerBack: Potencial de membrana para cada tiempo t de la simulación.
+    """
 
-    phi_val = phi(T)
-    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)
+    phi_val = phi(T)                                            # Se calcula el factor de temperatura (Φ)
+    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)   # Se crean arreglos de tiempo de simulación y corriente
+
+    # Se crean los vectores que almacenarán las soluciones (estimaciones) para Vm(t), n(t), m(t) y h(t) de cada iterac.
     Vm_EulerBack, n_EulerBack, m_EulerBack, h_EulerBack = creacionArreglos(V_m0,n_0,m_0,h_0, t)
 
+    # El sistema de ecuaciones planteado en la función FAux_EulerBack, se resuelve usando fsolve para hallar las
+    # raíces del modelo.
     for iter in range(1, len(t)):
         BackRoots = opt.fsolve(FAux_EulerBack, np.array([Vm_EulerBack[iter - 1],
                                                          n_EulerBack[iter - 1],
@@ -252,6 +314,7 @@ def EulerBack(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
                                (I[iter], Vm_EulerBack[iter - 1], n_EulerBack[iter - 1], m_EulerBack[iter - 1],
                                 h_EulerBack[iter - 1], phi_val, h_res))
 
+        # Se extraen los vectores de solución de cada una de las columnas de la matriz de raíces.
         Vm_EulerBack[iter] = BackRoots[0]
         n_EulerBack[iter] = BackRoots[1]
         m_EulerBack[iter] = BackRoots[2]
@@ -260,15 +323,35 @@ def EulerBack(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
     return t, Vm_EulerBack
 
 
-
 # III. EULER MOD
 
 def EulerMod(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
+    """
+    :param V_m0: Potencial de membrana inicial
+    :param n_0: Probabilidad inicial de n
+    :param m_0: Probabilidad inicial de m
+    :param h_0: Probabilidad inicial de h
+    :param T: Temperatura indicada por el usuario
+    :param opcion: * 1: Si la corriente es fija. * 2: Si la corriente es variable.
+    :param t1: [mS] Valor inicial del intervalo de tiempo 1.
+    :param t2: [mS] Valor final del intervalo de tiempo 1.
+    :param t3: [mS] Valor inicialdel intervalo de tiempo 2.
+    :param t4: [mS] Valor final del intervalo de tiempo 2.
+    :param I1: [mV] Intensidad de corriente del intervalo de tiempo 1.
+    :param I2: [mV] Intensidad de corriente del intervalo de tiempo 2.
+    :param h_res: [mS] Resolución o Step de tiempo para crear el rango. Default = 0.01 [mS]
+    :return: Tupla [t,Vm_EulerMod] -> t: Intervalo de tiempo de simulación.
+    Vm_EulerMod: Potencial de membrana para cada tiempo t de la simulación.
+    """
 
-    phi_val = phi(T)
-    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)
+    phi_val = phi(T)                                            # Se calcula el factor de temperatura (Φ)
+    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)   # Se crean arreglos de tiempo de simulación y corriente
+
+    # Se crean los vectores que almacenarán las soluciones (estimaciones) para Vm(t), n(t), m(t) y h(t) de cada iterac.
     Vm_EulerMod, n_EulerMod, m_EulerMod, h_EulerMod = creacionArreglos(V_m0,n_0,m_0,h_0, t)
 
+    # El sistema de ecuaciones planteado en la función FAux_EulerMod, se resuelve usando fsolve para hallar las
+    # raíces del modelo.
     for iter in range(1, len(t)):
         ModRoots = opt.fsolve(FAux_EulerMod, np.array([Vm_EulerMod[iter - 1],
                                                        n_EulerMod[iter - 1],
@@ -277,6 +360,7 @@ def EulerMod(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
                               (I[iter], Vm_EulerMod[iter - 1], n_EulerMod[iter - 1],
                                m_EulerMod[iter - 1], h_EulerMod[iter - 1], phi_val, h_res))
 
+        # Se extraen los vectores de solución de cada una de las columnas de la matriz de raíces.
         Vm_EulerMod[iter] = ModRoots[0]
         n_EulerMod[iter] = ModRoots[1]
         m_EulerMod[iter] = ModRoots[2]
@@ -285,13 +369,31 @@ def EulerMod(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
     return t, Vm_EulerMod
 
 
-
 # IV. RUNGE-KUTTA 2 (RK2)
 
 def RK2(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
+    """
+    :param V_m0: Potencial de membrana inicial
+    :param n_0: Probabilidad inicial de n
+    :param m_0: Probabilidad inicial de m
+    :param h_0: Probabilidad inicial de h
+    :param T: Temperatura indicada por el usuario
+    :param opcion: * 1: Si la corriente es fija. * 2: Si la corriente es variable.
+    :param t1: [mS] Valor inicial del intervalo de tiempo 1.
+    :param t2: [mS] Valor final del intervalo de tiempo 1.
+    :param t3: [mS] Valor inicialdel intervalo de tiempo 2.
+    :param t4: [mS] Valor final del intervalo de tiempo 2.
+    :param I1: [mV] Intensidad de corriente del intervalo de tiempo 1.
+    :param I2: [mV] Intensidad de corriente del intervalo de tiempo 2.
+    :param h_res: [mS] Resolución o Step de tiempo para crear el rango. Default = 0.01 [mS]
+    :return: Tupla [t,Vm_RK2] -> t: Intervalo de tiempo de simulación.
+    Vm_RK2: Potencial de membrana para cada tiempo t de la simulación.
+    """
 
-    phi_val = phi(T)
-    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)
+    phi_val = phi(T)                                            # Se calcula el factor de temperatura (Φ)
+    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)   # Se crean arreglos de tiempo de simulación y corriente
+
+    # Se crean los vectores que almacenarán las soluciones (estimaciones) para Vm(t), n(t), m(t) y h(t) de cada iterac.
     Vm_RK2, n_RK2, m_RK2, h_RK2 = creacionArreglos(V_m0,n_0,m_0,h_0, t)
 
     for iter in range(1, len(t)):
@@ -324,9 +426,28 @@ def RK2(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
 # V. RUNGE-KUTTA 4 (RK4)
 
 def RK4(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
+    """
+    :param V_m0: Potencial de membrana inicial
+    :param n_0: Probabilidad inicial de n
+    :param m_0: Probabilidad inicial de m
+    :param h_0: Probabilidad inicial de h
+    :param T: Temperatura indicada por el usuario
+    :param opcion: * 1: Si la corriente es fija. * 2: Si la corriente es variable.
+    :param t1: [mS] Valor inicial del intervalo de tiempo 1.
+    :param t2: [mS] Valor final del intervalo de tiempo 1.
+    :param t3: [mS] Valor inicialdel intervalo de tiempo 2.
+    :param t4: [mS] Valor final del intervalo de tiempo 2.
+    :param I1: [mV] Intensidad de corriente del intervalo de tiempo 1.
+    :param I2: [mV] Intensidad de corriente del intervalo de tiempo 2.
+    :param h_res: [mS] Resolución o Step de tiempo para crear el rango. Default = 0.01 [mS]
+    :return: Tupla [t,Vm_RK4] -> t: Intervalo de tiempo de simulación.
+    Vm_RK4: Potencial de membrana para cada tiempo t de la simulación.
+    """
 
-    phi_val = phi(T)
-    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)
+    phi_val = phi(T)                                            # Se calcula el factor de temperatura (Φ)
+    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)   # Se crean arreglos de tiempo de simulación y corriente
+
+    # Se crean los vectores que almacenarán las soluciones (estimaciones) para Vm(t), n(t), m(t) y h(t) de cada iterac.
     Vm_RK4, n_RK4, m_RK4, h_RK4 = creacionArreglos(V_m0,n_0,m_0,h_0, t)
 
     for iter in range(1, len(t)):
@@ -379,31 +500,50 @@ def RK4(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2,h_res=0.01):
 # VI. Odeint
 
 def SCIPY(V_m0, n_0, m_0, h_0, T, opcion, t1, t2, t3, t4, I1, I2, h_res=0.01):
+    """
+    :param V_m0: Potencial de membrana inicial
+    :param n_0: Probabilidad inicial de n
+    :param m_0: Probabilidad inicial de m
+    :param h_0: Probabilidad inicial de h
+    :param T: Temperatura indicada por el usuario
+    :param opcion: * 1: Si la corriente es fija. * 2: Si la corriente es variable.
+    :param t1: [mS] Valor inicial del intervalo de tiempo 1.
+    :param t2: [mS] Valor final del intervalo de tiempo 1.
+    :param t3: [mS] Valor inicialdel intervalo de tiempo 2.
+    :param t4: [mS] Valor final del intervalo de tiempo 2.
+    :param I1: [mV] Intensidad de corriente del intervalo de tiempo 1.
+    :param I2: [mV] Intensidad de corriente del intervalo de tiempo 2.
+    :param h_res: [mS] Resolución o Step de tiempo para crear el rango. Default = 0.01 [mS]
+    :return: Tupla [t,Vm_Scipy] -> t: Intervalo de tiempo de simulación.
+    Vm_Scipy: Potencial de membrana para cada tiempo t de la simulación.
+    """
 
-    phi_val = phi(T)
-    t, I = tiempo_y_corriente(opcion, t1, t2, t3, t4, I1, I2, h_res)
+    phi_val = phi(T)                                            # Se calcula el factor de temperatura (Φ)
+    t, I = tiempo_y_corriente(opcion,t1,t2,t3,t4,I1,I2,h_res)   # Se crean arreglos de tiempo de simulación y corriente
 
     # ECUACIÓN AUXILIAR I
     def Id(t_ev, t_1=t1, t_2=t2, t_3=t3, t_4=t4, I_1=I1, I_2=I2, op = opcion):
 
-        '''
-        :param t: [mS] Tiempo para el cual se quiere averiguar la corriente.
-        :return: [mV] Corriente en el tiempo t dado por parámetro.
-        '''
+        """
+        :param t_ev: [mS] Tiempo para el cual se quiere averiguar la corriente.
+        :return: [mV] Corriente en el tiempo t_ev dado por parámetro.
+        """
 
-        if t_ev >= t_1 and t_ev <= t_2: return I_1
-        elif (t_ev >= t_3 and t_ev <= t_4) and (op == 2): return I_2
-        else: return 0.0
+        if t_1 <= t_ev <= t_2:
+            return I_1
+        elif (t_3 <= t_ev <= t_4) and (op == 2):
+            return I_2
+        else:
+            return 0.0
 
     # ECUACIÓN AUXILIAR II
-    def deriv_ev_ini(X,t_ev):
-
-        '''
+    def FAux_Odeint(X,t_ev):
+        """
         :param X: Arreglo con valores iniciales del potencial de membrana inicial (V_m0) y la probabilidad inicial de
         n, m, h (n_0, m_0 y  h_0 respectivamente.)
-        :param t_0: Tiempo evaluado
+        :param t_ev: Tiempo evaluado
         :return: Matriz con las ecuaciones diferenciales evaluadas en t_0.
-        '''
+        """
 
         dy = np.zeros((4,))
         dy[0] = dV_dt(Id(t_ev),X[0],X[1],X[2],X[3])
@@ -414,60 +554,82 @@ def SCIPY(V_m0, n_0, m_0, h_0, T, opcion, t1, t2, t3, t4, I1, I2, h_res=0.01):
         return dy
 
     # Se implementa la solución del sistema ODE usando la funcion odeint de la librería Scipy.
-    Sol_Scipy = odeint(deriv_ev_ini,[V_m0, n_0, m_0, h_0],t)
+    Sol_Scipy = odeint(FAux_Odeint,[V_m0, n_0, m_0, h_0],t)
 
     # Por como se organizó el sistema, la primera columna (índice 0) corresponde al vector de soluciones Vm.
     Vm_Scipy = Sol_Scipy[:,0]
 
     return t, Vm_Scipy
 
-## 0. THIS IS ONLY A TEST :V TODO Borrar después de probar
-# este test se pude dejar, al hacer veridicacion de main hago que no se ejecute esta parte del codigo al importalo
+
+##======================================================================================================================
+#       ★ TEST PARA PROBAR QUE LOS MÉTODOS GRAFICAN CORRECTAMENTE LA SEÑAL DEL POTENCIAL DE ACCIÓN ★
+
+# Se hace la verificación de main permitiendo que no se ejecute esta parte del código al importarlo.
 if __name__ == '__main__':
-    plt.figure()
+
+    plt.figure()                        # Crea el lienzo del gráfico
     rcParams['font.family'] = 'serif'   # Define que las fuentes usadas en el gráfico son serifadas.
 
     plt.xlabel(r'$t\ \ [mS]$',fontsize='x-large')       # Título secundario del eje x
     plt.ylabel(r'$V_m\ [mV]$ ',fontsize='large')        # Título secundario del eje y
     plt.style.use('bmh')
 
-    plt.title('Potencial de acción de una neurona', fontsize='x-large')
-    plt.tight_layout(pad=2.0)
+    plt.title('Potencial de acción de una neurona', fontsize='x-large')     # Asigna el título y el tamaño de la fuente.
+    plt.tight_layout(pad=2.0)                                               # Se condigura el padding de los elementos.
 
-    # ESTOS SON LOS VALORES POR DEFECTO QUE UTILICÉ PARA PROBAR QUE ESTA VAINA FUNCIONA.
-    V_m0 = -65.0;   n_0 = 0.30;     m_0 = 0.05;     h_0 = 0.60
-    T = 10.0
+    #                                           VALORES INICIALES DE PRUEBA
+    V_m0p = -65.0                                       # Potencial de membrana inicial
+    n_0p = 0.30;     m_0p = 0.05;     h_0p = 0.60       # Probabilidad inicial de n, m, h
+    Temp = 10.0                                         # Temperatura
 
-    opcion = 1
-    t1 = 50.0;      t2 = 100.0;      t3 = 150.0;     t4 = 200.0
-    I1 = 20.0;                      I2 = -15.0
-    ##
-    t_eFor,V_eFor = EulerFor(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-    plt.plot(t_eFor,V_eFor,color='red',label="For")
-    plt.legend()
-    ##
-    t_eBack,V_eBack = EulerBack(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-    plt.plot(t_eBack,V_eBack,color='#fbb901',label="Back")
-    plt.legend()
 
-    ##
-    t_eMod,V_eMod = EulerMod(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-    plt.plot(t_eMod,V_eMod,color='darkgreen',label="Mod")
-    plt.legend()
+    #                                           CONFIGURACIÓN DE CORRIENTE
+    # Tipo de Corriente
+    opc = 2
+    # * Intervalo de tiempo 1                           * Invervalo de tiempo 2 (Corriente variable)
+    t1_p = 50.0;    t2_p = 100.0;                       t3_p = 150.0;     t4_p = 200.0
+    I1_p = 20.0;                                        I2_p = -15.0
 
-    ##
-    t_RK2,V_RK2 = RK2(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-    plt.plot(t_RK2,V_RK2,color='blue',label="RK2")
-    plt.legend()
 
-    ##
-    t_RK4,V_RK4 = RK4(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-    plt.plot(t_RK4,V_RK4,color='purple',label="RK4")
-    plt.legend()
+    ## I. Señal estimada por Euler For
 
-    ##
-    t_Scipy, V_Scipy = SCIPY(V_m0,n_0,m_0,h_0,T,opcion,t1,t2,t3,t4,I1,I2)
-    plt.plot(t_Scipy,V_Scipy,color='black',label="Scipy")
-    plt.legend()
+    # Obtiene arreglo de tiempo y potencial.
+    t_eFor,V_eFor = EulerFor(V_m0p,n_0p,m_0p,h_0p,Temp,opc,t1_p,t2_p,t3_p,t4_p,I1_p,I2_p)
+    plt.plot(t_eFor,V_eFor,color='red',label="For")                             # Grafica V vs t.
+    plt.legend()                                                                # Imprime label.
 
-    plt.show()
+    ## II. Señal estimada por Euler Back
+
+    # Obtiene arreglo de tiempo y potencial.
+    t_eBack,V_eBack = EulerBack(V_m0p,n_0p,m_0p,h_0p,Temp,opc,t1_p,t2_p,t3_p,t4_p,I1_p,I2_p)
+    plt.plot(t_eBack,V_eBack,color='#fbb901',label="Back")                      # Grafica V vs t.
+    plt.legend()                                                                # Imprime label.
+
+    ## III. Señal estimada por Euler Mod
+
+    # Obtiene arreglo de tiempo y potencial.
+    t_eMod,V_eMod = EulerMod(V_m0p,n_0p,m_0p,h_0p,Temp,opc,t1_p,t2_p,t3_p,t4_p,I1_p,I2_p)
+    plt.plot(t_eMod,V_eMod,color='darkgreen',label="Mod")                   # Grafica V vs t.
+    plt.legend()                                                            # Imprime label.
+
+    ## IV. Señal estimada por Runge-Kutta 2
+
+    # Obtiene arreglo de tiempo y potencial.
+    t_RK2,V_RK2 = RK2(V_m0p,n_0p,m_0p,h_0p,Temp,opc,t1_p,t2_p,t3_p,t4_p,I1_p,I2_p)
+    plt.plot(t_RK2,V_RK2,color='blue',label="RK2")                          # Grafica V vs t.
+    plt.legend()                                                            # Imprime label.
+
+    ## V. Señal estimada por Runge-Kutta 4
+
+    # Obtiene arreglo de tiempo y potencial.
+    t_RK4,V_RK4 = RK4(V_m0p,n_0p,m_0p,h_0p,Temp,opc,t1_p,t2_p,t3_p,t4_p,I1_p,I2_p)
+    plt.plot(t_RK4,V_RK4,color='purple',label="RK4")                        # Grafica V vs t.
+    plt.legend()                                                            # Imprime label.
+
+    ## VI. Señal estimada por Odeint
+
+    # Obtiene arreglo de tiempo y potencial.
+    t_Scipy, V_Scipy = SCIPY(V_m0p,n_0p,m_0p,h_0p,Temp,opc,t1_p,t2_p,t3_p,t4_p,I1_p,I2_p)
+    plt.plot(t_Scipy,V_Scipy,color='black',label="Scipy")                   # Grafica V vs t.
+    plt.legend()                                                            # Imprime label.
