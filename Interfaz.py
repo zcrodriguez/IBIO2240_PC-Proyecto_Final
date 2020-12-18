@@ -541,7 +541,8 @@ class Interfaz:
         retorna una lista con los valores leidos de X y Y de los archivos que encuentre en el path especificado con la extencion especificada
         '''
         # obtengo el nombre de todos los arvhicos con la extencion deseada
-        files = [f.absolute() for f in directorio.glob('*'+extencion) if f.is_file()]
+        ext = '*'+extencion
+        files = [f.absolute() for f in directorio.glob(ext) if f.is_file()]
         tmpSet = [] # variable donde se guardaran los conjuntos
         # proceso iterativo que lee cada archivo
         for tmpF in files:
